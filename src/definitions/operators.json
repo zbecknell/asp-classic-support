@@ -1,0 +1,26 @@
+{
+    "And": {
+        "documentation": "Performs a logical conjunction on two expressions."
+    },
+    "Eqv": {
+        "documentation": ""
+    },
+    "Imp": {
+        "documentation": "undocumented Used to perform a logical implication on two expressions."
+    },
+    "Is": {
+        "documentation": "Used to compare two object reference variables."
+    },
+    "Mod": {
+        "documentation": "Divides two integers and returns the integer remainder."
+    },
+    "Not": {
+        "documentation": "Performs logical negation on an expression."
+    },
+    "Or": {
+        "documentation": "Performs a logical disjunction on two expressions."
+    },
+    "Xor": {
+        "documentation": "Performs a logical exclusion on two expressions."
+    }
+}

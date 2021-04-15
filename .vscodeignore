@@ -1,0 +1,13 @@
+.vscode/**
+tests/**
+.gitignore
+src/
+dist/test/
+.eslintrc.json
+.prettierrc.json
+.cache
+**/*.map
+build.ps1
+tsconfig.json
+assets/docs/**
+.github/

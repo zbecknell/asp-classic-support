@@ -1,0 +1,134 @@
+{
+  "ByRef": {
+    "documentation": ""
+  },
+  "ByVal": {
+    "documentation": ""
+  },
+  "Call": {
+    "documentation": "Transfers control to a Sub procedure or Function procedure"
+  },
+  "Class": {
+    "documentation": ""
+  },
+  "Const": {
+    "documentation": ""
+  },
+  "Dim": {
+    "documentation": ""
+  },
+  "Do": {
+    "documentation": ""
+  },
+  "Each": {
+    "documentation": ""
+  },
+  "Else": {
+    "documentation": ""
+  },
+  "End": {
+    "documentation": ""
+  },
+  "Erase": {
+    "documentation": ""
+  },
+  "Execute": {
+    "documentation": ""
+  },
+  "ExecuteGlobal": {
+    "documentation": ""
+  },
+  "Exit": {
+    "documentation": ""
+  },
+  "For": {
+    "documentation": ""
+  },
+  "Function": {
+    "documentation": ""
+  },
+  "If": {
+    "documentation": ""
+  },
+  "In": {
+    "documentation": ""
+  },
+  "Loop": {
+    "documentation": ""
+  },
+  "New": {
+    "documentation": ""
+  },
+  "Next": {
+    "documentation": ""
+  },
+  "Option Explicit": {
+    "documentation": "Used at script level to force explicit declaration of all variables in that script."
+  },
+  "On Error Resume Next": {
+    "documentation": "Specifies that when a run-time error occurs, control goes to the statement immediately following the statement where the error occurred and execution continues"
+  },
+  "On Error Goto 0": {
+    "documentation": "Disables any enabled error handler in the current procedure."
+  },
+  "Redim Preserve": {
+    "documentation": ""
+  },
+  "Property": {
+    "documentation": ""
+  },
+  "Property Get": {
+    "documentation": "Property procedure, which gets the value of a property."
+  },
+  "Property Let": {
+    "documentation": "Property procedure, which assigns a value to a property."
+  },
+  "Property Set": {
+    "documentation": "Property procedure, which sets a reference to an object."
+  },
+  "Private": {
+    "documentation": ""
+  },
+  "Public": {
+    "documentation": ""
+  },
+  "Randomize": {
+    "documentation": "Initializes the random-number generator."
+  },
+  "ReDim": {
+    "documentation": "Used at the procedure level to reallocate storage space for dynamic array variables."
+  },
+  "Rem": {
+    "documentation": ""
+  },
+  "Select Case": {
+    "documentation": ""
+  },
+  "Stop": {
+    "documentation": ""
+  },
+  "Step": {
+    "documentation": "Amount counter is changed each time through the loop. If not specified, step defaults to one."
+  },
+  "Sub": {
+    "documentation": ""
+  },
+  "Then": {
+    "documentation": ""
+  },
+  "To": {
+    "documentation": ""
+  },
+  "Until": {
+    "documentation": ""
+  },
+  "Wend": {
+    "documentation": ""
+  },
+  "While": {
+    "documentation": ""
+  },
+  "With": {
+    "documentation": ""
+  }
+}

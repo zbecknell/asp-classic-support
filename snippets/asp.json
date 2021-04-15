@@ -1,0 +1,230 @@
+{
+	"new class": {
+		"prefix": "Class",
+		"body": [
+			"Class ${1:$TM_FILENAME_BASE}",
+				"",
+				"\tPrivate Sub Class_Initialize()",
+					"\t\t",
+				"\tEnd Sub",
+				"",
+				"\tPrivate Sub Class_Terminate()",
+					"\t\t",
+				"\tEnd Sub",
+				"",
+				"$0",
+			"End Class ' $1"
+		],
+		"description": "New Class..."
+	},
+
+	"new fso": {
+		"prefix": "FileSystemObject",
+		"body": [
+			"Set fso = CreateObject(\"Scripting.FileSystemObject\")"
+		],
+		"description": "New FileSystemObject..."
+	},
+
+	"new dictionary": {
+		"prefix": "Dictionary",
+		"body": [
+			"Set ${1:ObjName} = CreateObject(\"Scripting.Dictionary\")"
+		],
+		"description": "New Dictionary..."
+	},
+
+	"wmiquery": {
+		"prefix": "wmiquery",
+		"body": [
+			"Set ${1:WmiQuery} = GetObject(\"winmgmts:\").ExecQuery(\"SELECT * FROM ${2:Win32_Class}\")"
+		],
+		"description": "Execute WMI Query"
+	},
+
+	"Wscript.Echo": {
+		"prefix": "Echo",
+		"body": [
+			"WScript.Echo $0"
+		]
+	},
+
+	"new function": {
+		"prefix": "Function",
+		"body": [
+			"Function ${1:Name}(${2:Parameter})",
+				"\t$0",
+			"End Function ' ${1:Name}"
+		],
+		"description": "New Function..."
+	},
+	"new sub": {
+		"prefix": "Sub",
+		"body": [
+			"Sub ${1:Name}(${2:Parameter})",
+				"\t$0",
+			"End Sub ' ${1:Name}"
+		],
+		"description": "New Sub..."
+	},
+
+	"public property": {
+		"prefix": "PropertyPublic",
+		"body": [
+			"Public Property Get ${1:PropertyName}",
+				"\tSet ${1:PropertyName} = m_${1:PropertyName}",
+			"End Property",
+			"Public Property Let ${1:PropertyName}(Value)",
+				"\tSet m_${1:PropertyName} = Value",
+			"End Property"
+		],
+		"description": "Public Property..."
+	},
+	"private property": {
+		"prefix": "PropertyPrivate",
+		"body": [
+			"Private Property Get ${1:PropertyName}",
+				"\tSet ${1:PropertyName} = m_${1:PropertyName}",
+			"End Property",
+			"Private Property Let ${1:PropertyName}(Value)",
+				"\tSet m_${1:PropertyName} = Value",
+			"End Property"
+		],
+		"description": "Private Property..."
+	},
+
+	"if statement": {
+		"prefix": "If",
+		"body": [
+			"If ${1:True} Then",
+				"\t$0",
+			"End If"
+		],
+		"description": "If Then..."
+	},
+
+	"if Else statement": {
+		"prefix": "IfElse",
+		"body": [
+			"If ${1:True} Then",
+				"\t$0",
+			"Else",
+				"\t",
+			"End If"
+		],
+		"description": "If Else Then..."
+	},
+
+	"elseif statement": {
+		"prefix": "ElseIf",
+		"body": [
+			"ElseIf ${1:True} Then",
+				"\t$0"
+		],
+		"description": "ElseIf..."
+	},
+
+	"select case": {
+		"prefix": "SelectCase",
+		"body": [
+			"Select Case ${1:Statement}",
+				"\tCase ${0}",
+					"\t\t",
+				"\tCase Else",
+					"\t\t",
+			"End Select"
+		],
+		"description": "Select Case..."
+	},
+
+	"for... next": {
+		"prefix": "For",
+		"body": [
+			"For ${1:i}=0 To ${2:Value}",
+				"\t$0",
+			"Next '${1:i}"
+		],
+		"description": "For... Next"
+	},
+	"for each": {
+		"prefix": "ForEach",
+		"body": [
+			"For Each ${1:Element} In ${2:ElementList}",
+				"\t$0",
+			"Next ' ${1:Element}"
+		],
+		"description": "For Each..."
+	},
+
+	"do loop until": {
+		"prefix": "DoLoopUntil",
+		"body": [
+			"Do",
+				"\t$0",
+			"Loop Until ${1:Statement}"
+		],
+		"description": "Do Loop Until"
+	},
+	"do loop while": {
+		"prefix": "DoLoopWhile",
+		"body": [
+			"Do",
+				"\t$0",
+			"Loop While ${1:Statement}"
+		],
+		"description": "Do Loop While"
+	},
+	"do until loop": {
+		"prefix": "DoUntil",
+		"body": [
+			"Do Until ${1:Statement}",
+				"\t$0",
+			"Loop"
+		],
+		"description": "Do Until Loop"
+	},
+	"do while loop": {
+		"prefix": "DoWhile",
+		"body": [
+			"Do While ${1:Statement}",
+				"\t$0",
+			"Loop"
+		],
+		"description": "Do While Loop"
+	},
+	"while": {
+		"prefix": "While",
+		"body": [
+			"While ${1:Statement}",
+				"\t$0",
+			"Wend"
+		],
+		"description": "Do While Loop"
+	},
+	"with": {
+		"prefix": "With",
+		"body": [
+			"With ${1:Object}",
+				"\t$0",
+			"End With ' ${1:Object}"
+		],
+		"description": "With Block"
+	},
+	"errorhandler": {
+		"prefix": "ErrorHandler",
+		"body": [
+			"On Error Resume Next",
+				"\t$0",
+			"On Error Goto 0"
+		],
+		"description": "Error Handler"
+	},
+	"Comment-Based-Help": {
+		"prefix": "'''",
+		"body": [
+			"''' <summary>$1</summary>",
+			"''' <param name=\"$2\">$3</param>"
+		],
+		"description": "Comment-Based-Help"
+	}
+}

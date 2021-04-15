@@ -1,0 +1,178 @@
+{
+	"information_for_contributors": [
+		"This file has been converted from https://github.com/textmate/asp.vb.net.tmbundle/blob/master/Syntaxes/ASP%20VB.net.plist",
+		"If you want to provide a fix or improvement, please create a pull request against the original repository.",
+		"Once accepted there, we are happy to receive an update request."
+	],
+	"version": "https://github.com/textmate/asp.vb.net.tmbundle/commit/72d44550b3286d0382d7be0624140cf97857ff69",
+	"name": "VBScript",
+	"scopeName": "source.vbs",
+	"comment": "Modified from the original ASP bundle. Originally modified by Thomas Aylott subtleGradient.com",
+	"patterns": [
+		{
+			"match": "\\n",
+			"name": "meta.ending-space"
+		},
+		{
+			"match": ":",
+			"name": "punctuation.terminator.statement.vbs"
+		},
+		{
+			"begin": "^(?=\\t)",
+			"end": "(?=[^\\t])",
+			"name": "meta.leading-space",
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "meta.odd-tab.tabs"
+						},
+						"2": {
+							"name": "meta.even-tab.tabs"
+						}
+					},
+					"match": "(\\t)(\\t)?"
+				}
+			]
+		},
+		{
+			"begin": "^(?= )",
+			"end": "(?=[^ ])",
+			"name": "meta.leading-space",
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "meta.odd-tab.spaces"
+						},
+						"2": {
+							"name": "meta.even-tab.spaces"
+						}
+					},
+					"match": "(  )(  )?"
+				}
+			]
+		},
+		{
+			"name": "comment.line.vbs",
+			"match": "(?i:'|Rem\\b).*$"
+		},
+		{
+			"comment": "function definition",
+			"captures": {
+				"1": {
+					"name": "storage.modifier.vbs"
+				},
+				"2": {
+					"name": "storage.type.function.vbs"
+				},
+				"3": {
+					"name": "entity.name.function.vbs"
+				},
+				"4": {
+					"name": "punctuation.definition.parameters.begin.vbs"
+				},
+				"5": {
+					"name": "variable.parameter.function.vbs"
+				},
+				"6": {
+					"name": "punctuation.definition.parameters.end.vbs"
+				}
+			},
+			"match": "(?i:(Private|Public)[\\t ]+)?(?i:(Class|Function|Sub|(?:Default\\s+)?Property [GLS]et))[\\t ]+(\\[?[a-zA-Z]\\w*\\]?)[\\t ]*(?:(\\()([^)]*)(\\)))?"
+		},
+		{
+			"match": "(?i:End[\\t ]+(Sub|Function|Class|Property))",
+			"name": "storage.type.end.vbs"
+		},
+		{
+			"match": "(?i:\\s*\\b(Redim|Redim Preserve|With|End With|New|Randomize|Option Explicit|On Error Resume Next|On Error GoTo|Stop)\\b\\s*)",
+			"name": "keyword.control.vbs"
+		},
+		{
+			"comment": "not working (in only valid place), overwirtten by variable.parameter.function.vbs",
+			"match": "(?i:\\b(ByRef|ByVal)\\b)",
+			"name": "storage.modifier.vbs"
+		},
+		{
+			"match": "(?i:\\b(Call|If|Then|Else|ElseIf|End If|Set|While|Wend|For|Step|To|Each|In|Case|Select|End Select|Continue|Do|Until|Loop|Next|Exit (Do|For|Function|Property|Sub))\\b)",
+			"name": "keyword.control.vbs"
+		},
+		{
+			"match": "(?i:\\b(Mod|And|Not|Or|Xor|as|Is|Eqv)\\b)",
+			"name": "keyword.operator.expression.vbs"
+		},
+		{
+			"captures": {
+				"1": {
+					"name": "storage.type.vbs"
+				},
+				"2": {
+					"name": "variable.other.dim.vbs"
+				}
+			},
+			"match": "\\b(?i:((?:public|private)\\s+const|public|private|dim|const)\\s+\\b(\\[?[a-zA-Z]\\w*\\]?\\b(?:\\s*,\\s*\\b\\[?[a-zA-Z]\\w*\\]?\\b)*))"
+		},
+		{
+			"match": "(?i:\\s*\\b(Empty|False|Nothing|Null|True)\\b)",
+			"name": "constant.language.vbs"
+		},
+		{
+			"begin": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.vbs"
+				}
+			},
+			"end": "\"",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.vbs"
+				}
+			},
+			"name": "string.quoted.double.vbs",
+			"patterns": [
+				{
+					"match": "\"\"",
+					"name": "constant.character.escape.apostrophe.vbs"
+				}
+			]
+		},
+		{
+			"match": "(?i:\\b(Array|Add|Asc|Atn|CBool|CByte|CCur|CDate|CDbl|Chr|CInt|CLng|Cos|CreateObject|CSng|CStr|Date|DateAdd|DateDiff|DatePart|DateSerial|DateValue|Day|Derived|Escape|Eval|Exists|Exp|Filter|FormatCurrency|FormatDateTime|FormatNumber|FormatPercent|GetLocale|GetObject|GetRef|Hex|Hour|InputBox|InStr|InStrRev|Int|Fix|IsArray|IsDate|IsEmpty|IsNull|IsNumeric|IsObject|Join|LBound|LCase|Left|Len|LoadPicture|Log|LTrim|RTrim|Trim|Mid|Minute|Month|MonthName|MsgBox|Now|Oct|Replace|RGB|Right|Rnd|Round|ScriptEngine|ScriptEngineBuildVersion|ScriptEngineMajorVersion|ScriptEngineMinorVersion|Second|SetLocale|Sgn|Sin|Space|Split|Sqr|StrComp|String|StrReverse|Tan|Time|Timer|TimeSerial|TimeValue|TypeName|UBound|UCase|Unescape|VarType|Weekday|WeekdayName|Year)\\b)",
+			"name": "support.function.vbs"
+		},
+		{
+			"match": "(?i:\\b(Err|Debug|WScript|vbtrue|vbfalse|vbcr|vbcrlf|vbformfeed|vblf|vbnewline|vbnullchar|vbnullstring|vbtab|vbverticaltab|vbbinarycompare|vbtextcomparevbsunday|vbmonday|vbtuesday|vbwednesday|vbthursday|vbfriday|vbsaturday|vbusesystemdayofweek|vbfirstjan1|vbfirstfourdays|vbfirstfullweek|vbgeneraldate|vblongdate|vbshortdate|vblongtime|vbshorttime|vbobjecterror|vbEmpty|vbNull|vbInteger|vbLong|vbSingle|vbDouble|vbCurrency|vbDate|vbString|vbObject|vbError|vbBoolean|vbVariant|vbDataObject|vbDecimal|vbByte|vbArray)\\b)",
+			"name": "support.type.vbs"
+		},
+		{
+			"match": "\\b\\[?[a-zA-Z]\\w*\\]?\\s*\\(",
+			"name": "entity.name.function.vbs"
+		},
+		{
+			"match": "#\\d+\/\\d+\/\\d+#",
+			"name": "constant.numeric.date.vbs"
+		},
+		{
+			"match": "\\b((([0-9]+\\.?[0-9]*)|(\\.[0-9]+))((e|E)(\\+|-)?[0-9]+)?)\\b",
+			"name": "constant.numeric.vbs"
+		},
+		{
+			"match": "&(h|H)[0-9a-fA-F]+\\b",
+			"name": "constant.numeric.hex.vbs"
+		},
+		{
+			"match": "&(o|O)[0-7]+\\b",
+			"name": "constant.numeric.oct.vbs"
+		},
+		{
+			"match": "\\b\\[?[a-zA-Z]\\w*\\]?(?=\\.)",
+			"name": "variable.other.object.vbs"
+		},
+		{
+			"match": "(?<=\\.)\\[?[a-zA-Z]\\w*\\]?\\b",
+			"name": "variable.other.member.vbs"
+		}
+	]
+}

@@ -1,0 +1,132 @@
+{
+  "name": "asp-classic-support",
+  "displayName": "ASP Classic Supoprt",
+  "description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
+  "version": "0.1.0",
+  "publisher": "zbecknell",
+  "icon": "assets/logo.png",
+  "engines": {
+    "vscode": "^1.43.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "ASP",
+    "Classic",
+    "ASP Classic",
+    "Active Server Pages",
+    "VBS",
+    "VBScript"
+  ],
+  "bugs": {
+    "url": "https://github.com/zbecknell/asp-classic-support/issues"
+  },
+  "license": "MIT",
+  "main": "./dist/extension",
+  "activationEvents": [
+    "onLanguage:asp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zbecknell/asp-classic-support.git"
+  },
+  "homepage": "https://github.com/zbecknell/asp-classic-support",
+  "contributes": {
+    "languages": [
+      {
+        "id": "vbs",
+        "aliases": [
+          "VBScript",
+          "vbs"
+        ],
+        "extensions": [
+          ".vbs"
+        ],
+        "configuration": "./syntaxes/vbs.configuration.json"
+      },
+      {
+        "id": "asp",
+        "configuration": "./syntaxes/asp.configuration.json",
+        "aliases": [
+            "ASP",
+            "asp"
+        ],
+        "extensions": [
+            ".asa",
+            ".asp"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vbs",
+        "scopeName": "source.vbs",
+        "path": "./syntaxes/vbs.tmLanguage.json"
+      },
+      {
+        "language": "asp",
+        "scopeName": "text.html.asp",
+        "path": "./syntaxes/asp.html.tmLanguage.json",
+        "embeddedLanguages": {
+          "text.html.asp": "asp",
+          "text.html": "html",
+          "source.sql": "sql",
+          "text.xml": "xml",
+          "source.js": "javascript",
+          "source.vbs": "vbscript",
+          "source.json": "json",
+          "source.css": "css"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "asp",
+        "path": "./snippets/asp.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "ASP Classic Support",
+      "properties": {
+        "asp.showVariableSymbols": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show variables in outline"
+        },
+        "asp.showParameterSymbols": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show parameters in outline"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.14",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.25",
+    "@types/vscode": "~1.43.0",
+    "@typescript-eslint/eslint-plugin": "^4.14.2",
+    "@typescript-eslint/parser": "^4.14.2",
+    "eslint": "^7.19.0",
+    "mocha": "^8.2.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3",
+    "vscode-test": "^1.5.0"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint -c .eslintrc --ext .ts src",
+    "watch": "tsc -watch -p ./",
+    "test": "mocha dist/test/*.test.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-debugadapter": "^1.44.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "editor.tabSize": 2,
+    "files.exclude": {
+        "**/dist": true,
+        "**/node_modules": true,
+        ".cache": true
+    },
+    "search.exclude": {
+        "**/node_modules/": true,
+        "**/*.js": true,
+        "**/*.txt": true,
+        "package-lock.json":true
+    },
+    "eslint.format.enable": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    }
+}
