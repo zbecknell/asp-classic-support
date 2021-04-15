@@ -105,8 +105,11 @@ function specialHighlighting(context: ExtensionContext) {
 }
 
 export function activate(context: ExtensionContext): void {
-  includes.set("Global", new IncludeFile(context.asAbsolutePath("./src/definitions/functions.vbs")));
-  includes.set("ObjectDefs", new IncludeFile(context.asAbsolutePath("./src/definitions/objects.vbs")));
+	var functionIncludesFile = context.asAbsolutePath("./definitions/functions.vbs");
+	var objectIncludesFile = context.asAbsolutePath("./definitions/objects.vbs");
+
+  includes.set("Global", new IncludeFile(functionIncludesFile));
+  includes.set("ObjectDefs", new IncludeFile(objectIncludesFile));
 
   workspace.onDidChangeConfiguration(reloadImportDocuments);
   reloadImportDocuments();
