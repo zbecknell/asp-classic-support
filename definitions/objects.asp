@@ -607,13 +607,89 @@ End Class
 
 #Region ASP
 
-''' <summary>Used to send output to the user from the server.</summary>
+''' <summary>[Used to send output to the user from the server.](https://www.w3schools.com/asp/asp_ref_response.asp)</summary>
 Class Response
 
-	''' <summary>Used to set or get cookie values. If the cookie does not exist, it will be created, and take the value that is specified.</summary>
+	''' <summary>[Used to set or get cookie values. If the cookie does not exist, it will be created, and take the value that is specified.](https://www.w3schools.com/asp/coll_cookies_response.asp)</summary>
 	''' <param name="name">The name of the cookie to get.</param>
 	Function Cookies(name)
 	End Function
+
+	''' <summary>[A boolean value that specifies whether to buffer the page output or not.](https://www.w3schools.com/asp/prop_buffer.asp)</summary>
+	Property Get Buffer
+	End Property
+
+	
+	''' <summary>[A cache control header that can be set to "Public" or "Private".](https://www.w3schools.com/asp/prop_cachecontrol.asp)</summary>
+	Property Get CacheControl
+	End Property
+
+	''' <summary>[Appends the name of a character-set to the content-type header in the Response object.](https://www.w3schools.com/asp/prop_charset.asp)</summary>
+	Property Get Charset
+	End Property
+
+	''' <summary>[Sets the HTTP content type for the Response object.](https://www.w3schools.com/asp/prop_contenttype.asp)</summary>
+	Property Get ContentType
+	End Property
+	
+	''' <summary>[Sets how long (in minutes) a page will be cached on a browser before it expires.](https://www.w3schools.com/asp/prop_expires.asp)</summary>
+	Property Get Expires
+	End Property
+	
+	''' <summary>(Sets a date and time when a page cached on a browser will expire.)[https://www.w3schools.com/asp/prop_expiresabsolute.asp]</summary>
+	Property Get ExpiresAbsolute
+	End Property
+	
+	''' <summary>(Indicates if the client has disconnected from the server.)[https://www.w3schools.com/asp/prop_isclientconnected.asp]</summary>
+	Property Get IsClientConnected
+	End Property
+	
+	''' <summary>[Appends a value to the PICS label response header.](https://www.w3schools.com/asp/prop_pics.asp)</summary>
+	Property Get Pics
+	End Property
+	
+	''' <summary>[Specifies the value of the status line returned by the server.](https://www.w3schools.com/asp/prop_status.asp)</summary>
+	Property Get Status
+	End Property
+	
+	''' <summary>[Adds a new HTTP header and a value to the HTTP response.](https://www.w3schools.com/asp/met_addheader.asp)</summary>
+	''' <param name="name" required="true">The name of the new header variable (cannot contain underscores).</param>
+	''' <param name="value" required="true">The initial value of the new header variable.</param>
+	Function AddHeader(name, value)
+	End Function
+	
+	''' <summary>[Adds a string to the end of the server log entry.]()</summary>
+	''' <param name="value" required="true">The text to append to the log file (cannot contain any comma characters).</param>
+	Function AppendToLog(value)
+	End Function
+	
+	''' <summary>[Writes data directly to the output without any character conversion.](https://www.w3schools.com/asp/met_binarywrite.asp)</summary>
+	''' <param name="data" required="true">The binary information to be sent.</param>
+	Function BinaryWrite(data)
+	End Function
+	
+	''' <summary>[Clears any buffered HTML output](https://www.w3schools.com/asp/met_clear.asp)</summary>
+	Function Clear()
+	End Function
+	
+	''' <summary>[Stops processing a script and returns the current result.](https://www.w3schools.com/asp/met_end.asp)</summary>
+	Function End()
+	End Function
+	
+	''' <summary>[Sends buffered HTML output immediately.](https://www.w3schools.com/asp/met_flush.asp)</summary>
+	Function Flush()
+	End Function
+	
+	''' <summary>[Redirects the user to a different URL.](https://www.w3schools.com/asp/met_redirect.asp)</summary>
+	''' <param name="url" required="true">The URL that the user (browser) is redirected to.</param>
+	Function Redirect(url)
+	End Function
+	
+	''' <summary>[Writes a specified string to the output.](https://www.w3schools.com/asp/met_write_response.asp)</summary>
+	''' <param name="data" required="true">The data to write.</param>
+	Function Write(data)
+	End Function
+	
 
 End Class
 

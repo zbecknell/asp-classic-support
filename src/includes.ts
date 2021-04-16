@@ -26,7 +26,7 @@ export const includePattern = /<!--\s*#include\s*file="(.*?)"\s*-->/ig
 
 /** Gets any included files in the given document. */
 export function getImportedFiles(doc: TextDocument) : [string, IncludeFile][] {
-  const localIncludes = [...includes];
+  const localIncludes = [];
   const processedMatches = Array<string>();
 
   let match : RegExpExecArray;

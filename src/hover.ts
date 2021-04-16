@@ -1,6 +1,8 @@
 import { languages, Hover, TextDocument, Position, Range, MarkdownString } from "vscode";
 import * as PATTERNS from "./patterns";
 import { getImportedFiles } from "./includes";
+import { builtInSymbols, output } from "./extension";
+import { currentDocSymbols } from "./symbols";
 
 function getHover(docText: string, lookup: string, scope: string): Hover[] {
   const results: Hover[] = [];
@@ -74,39 +76,65 @@ function provideHover(doc: TextDocument, position: Position): Hover {
   const word: string = wordRange ? doc.getText(wordRange) : "";
   const line = doc.lineAt(position).text;
 
-  const hoverresults: Hover[] = [];
 
-  if (word.trim() === "") {
-    return null;
-  }
+	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols]);
 
-  if (!new RegExp(`^[^']*${word}`).test(line))
-    return null;
+	output.appendLine(`All symbols count: ${allSymbols.size}`);
 
-  let count = 0;
-  for (let i = 0; i < position.character; i++) {
-    if (line[i] === '"') {
-      count++;
-    } 
-  }
+	for(const item of allSymbols) {
+		const symbol = item.symbol;
 
-  if (count % 2 === 1) {
-    return null;
-  }
+		if(symbol.name.toLowerCase() === word.toLowerCase()){
 
-  hoverresults.push(...getHover(doc.getText(), word, "Local"));
+			const content = new MarkdownString();
 
-  for (const includedFile of getImportedFiles(doc)) {
-    hoverresults.push(...getHover(includedFile[1].Content, word, includedFile[0]));
-  }
+			content.appendCodeblock(`Dim ${symbol.name}`, "vbs");
 
-  // hoverresult for param must be above
-  hoverresults.push(...getParamHover(doc.getText(new Range(new Position(0, 0), new Position(position.line + 1, 0))), word));
+			return new Hover(content);
+		}
+	}
 
-  if (hoverresults.length > 0)
-    return hoverresults[0];
-  else
-    return null;
+	return null;
+
+
+
+
+
+  // const hoverresults: Hover[] = [];
+
+  // if (word.trim() === "") {
+  //   return null;
+  // }
+
+  // if (!new RegExp(`^[^']*${word}`).test(line))
+  //   return null;
+
+  // let count = 0;
+  // for (let i = 0; i < position.character; i++) {
+  //   if (line[i] === '"') {
+  //     count++;
+  //   } 
+  // }
+
+  // if (count % 2 === 1) {
+  //   return null;
+  // }
+
+  // hoverresults.push(...getHover(doc.getText(), word, "Local"));
+
+  // for (const includedFile of getImportedFiles(doc)) {
+  //   hoverresults.push(...getHover(includedFile[1].Content, word, includedFile[0]));
+  // }
+
+  // // hoverresult for param must be above
+  // hoverresults.push(...getParamHover(doc.getText(new Range(new Position(0, 0), new Position(position.line + 1, 0))), word));
+
+  // if (hoverresults.length > 0) {
+  //   return hoverresults[0];
+	// }
+  // else {
+  //   return null;
+	// }
 }
 
 export default languages.registerHoverProvider(

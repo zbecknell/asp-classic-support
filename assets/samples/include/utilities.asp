@@ -15,6 +15,11 @@ Function Foo(bar)
 
     Dim myVariable = bar
 
+	Response.CacheControl = "True"
+	Response.Buffer = false
+
+	Response.Write()
+
 End Function
 
 %>

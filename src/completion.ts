@@ -1,9 +1,9 @@
 import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol } from "vscode";
 import definitions from "./definitions";
 import { includes, getImportedFiles } from "./includes";
-import { output } from "./extension"
+import { builtInSymbols, output } from "./extension"
 import * as PATTERNS from "./patterns";
-import { allSymbols } from "./symbols";
+import { currentDocSymbols } from "./symbols";
 import { getRegionsInsideRange, replaceCharacter } from "./region";
 
 const objectSourceImportName = "ObjectDefs";
@@ -147,12 +147,12 @@ function getCompletions(text: string, scope: string, parseParams = false) {
 }
 
 /** Returns true if an object was found... or something? */
-function getObjectMembersCode(line: string, code: string, objectsToAdd : CompletionItem[], objectName: string): boolean {
+function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: string): boolean {
 
-  for(const symbol of allSymbols) {
-    if(symbol[1].symbol.kind === SymbolKind.Class && symbol[1].symbol.name.toLowerCase() === objectName.toLowerCase()) {
+  for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
+    if(symbol.symbol.kind === SymbolKind.Class && symbol.symbol.name.toLowerCase() === objectName.toLowerCase()) {
 
-      for(const item of symbol[1].symbol.children) {
+      for(const item of symbol.symbol.children) {
 
         const completion = getCompletionFromSymbol(item);
 
@@ -243,12 +243,7 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
     return [];
   }
 
-  const text = doc.getText();
   const results: CompletionItem[] = [];
-
-  const objectSourceImport = includes.get(objectSourceImportName);
-
-  const localIncludes = getImportedFiles(doc);
 
   /**  
    * Matches when the last character typed is a dot
@@ -265,45 +260,36 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
     output.appendLine(`Dot typed for object: ${objectName}`);
 
     // eslint-disable-next-line no-empty
-    if (getObjectMembersCode(codeAtPosition, objectSourceImport.Content, results, objectName)) {
+    if (getObjectMembersCode(results, objectName)) {
 
     } 
     else {
 
-      results.push(...getCompletions(text, "Local"));
+			// Fall back to using all available symbols
+			for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
 
-      results.push(
-        ...getFunctionCompletions(objectSourceImport.Content, objectSourceImportName),
-        ...getPropertyCompletions(objectSourceImport.Content, objectSourceImportName)
-      );
+				const completion = getCompletionFromSymbol(symbol.symbol);
 
-      for (const includedFile of localIncludes) {
-        if (includedFile[0].startsWith("Import")) {
-          results.push(...getCompletions(includedFile[1].Content, includedFile[0]));
-        }
-      }
+				if(!symbol.isTopLevel) continue;
+				if(results.some(i => i.label === completion.label && i.kind == completion.kind )) continue;
+
+				results.push(completion);
+			}
+
     }
   } 
   else { 
-    // Show global members
-    // results.push(...definitions);
-    // results.push(...getCompletions(text, "Local", true));
 
-    // results.push(...getClassCompletions(objectSourceImport.Content, objectSourceImportName));
+		// TODO: don't factor out this and above as it's copy/paste
+		// No DOT, use all available symbols
+    for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
 
-    // for (const includedFile of localIncludes) {
-    //   if (includedFile[0].startsWith("Import") || includedFile[0] === "Global") {
-    //     results.push(...getCompletions(includedFile[1].Content, includedFile[0]));
-    //   }
-    // }
+			const completion = getCompletionFromSymbol(symbol.symbol);
 
-    // TODO: make sure this works
-    for(const symbol of allSymbols) {
+      if(!symbol.isTopLevel) continue;
+			if(results.some(i => i.label === completion.label && i.kind == completion.kind )) continue;
 
-      if(!symbol[1].isTopLevel) continue;
-
-      const item = symbol[1].symbol;
-      results.push(getCompletionFromSymbol(item));
+      results.push(completion);
     }
   }
 

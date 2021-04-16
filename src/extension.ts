@@ -1,7 +1,7 @@
 import { ExtensionContext, workspace, window, DecorationOptions, Range, TextDocument, Position } from "vscode";
 import hoverProvider from "./hover";
 import completionProvider from "./completion";
-import symbolsProvider from "./symbols";
+import symbolsProvider, { AspSymbol } from "./symbols";
 import signatureProvider from "./signature";
 import definitionProvider from "./definition";
 import colorProvider from "./colorprovider";
@@ -10,6 +10,9 @@ import { ASP_BRACKETS } from "./patterns";
 import { AspRegion } from "./region";
 
 export const output = window.createOutputChannel("ASP Classic");
+
+/** List of all built-in ASP symbols parsed once from source files. */
+export const builtInSymbols = new Set<AspSymbol>();
 
 function specialHighlighting(context: ExtensionContext) {
   const bracketDecorationType = window.createTextEditorDecorationType({
@@ -133,6 +136,8 @@ export function getAspRegions(doc: TextDocument): AspRegion[] {
 export function activate(context: ExtensionContext): void {
 
 	output.show();
+
+	output.appendLine("Extension activated");
 
 	var functionIncludesFile = context.asAbsolutePath("./definitions/functions.asp");
 	var objectIncludesFile = context.asAbsolutePath("./definitions/objects.asp");

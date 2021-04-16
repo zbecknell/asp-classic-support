@@ -3,8 +3,8 @@
 import { languages, SymbolKind, DocumentSymbol, Range, workspace, TextDocument, Position } from "vscode";
 import * as PATTERNS from "./patterns";
 import * as path from "path";
-import { includes } from "./includes";
-import { getAspRegions } from "./extension";
+import { getImportedFiles, includes } from "./includes";
+import { builtInSymbols, getAspRegions, output } from "./extension";
 import { AspRegion, getRegionsInsideRange, isInsideAspRegion, replaceCharacter } from "./region";
 
 const showVariableSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showVariableSymbols");
@@ -19,13 +19,14 @@ const PROP = RegExp(PATTERNS.PROP.source, "i");
 export interface AspSymbol {
   symbol: DocumentSymbol;
   isTopLevel: boolean;
+	sourceFile: string;
 }
 
-/** List of all available symbols for the current context. */
-export const allSymbols = new Map<string, AspSymbol>();
+
+export const currentDocSymbols = new Set<AspSymbol>();
 
 /** Gets all DocumentSymbols for the given document. */
-function getSymbolsForDocument(doc: TextDocument): DocumentSymbol[] {
+function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fileName: string): DocumentSymbol[] {
  
   /** The final list of symbols parsed from this document */
   const result: DocumentSymbol[] = [];
@@ -166,9 +167,11 @@ function getSymbolsForDocument(doc: TextDocument): DocumentSymbol[] {
 
               if (blocks.length === 0) {
                 result.push(variableSymbol);
+								collection.add({ isTopLevel: true, symbol: variableSymbol, sourceFile: fileName })
               }
               else {
                 blocks[blocks.length - 1].children.push(variableSymbol);
+								collection.add({ isTopLevel: false, symbol: variableSymbol, sourceFile: fileName })
               }
             }
           }
@@ -179,9 +182,11 @@ function getSymbolsForDocument(doc: TextDocument): DocumentSymbol[] {
 
         if (blocks.length === 0) {
           result.push(symbol);
+					collection.add({ isTopLevel: true, symbol: symbol, sourceFile: fileName })
         }
         else {
           blocks[blocks.length - 1].children.push(symbol);
+					collection.add({ isTopLevel: false, symbol: symbol, sourceFile: fileName })
         }
 
         blocks.push(symbol);
@@ -199,36 +204,34 @@ function getSymbolsForDocument(doc: TextDocument): DocumentSymbol[] {
 
 async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol[]> {
 
-  // Loop through included files and add symbols for them
-  for(const includedFile of includes) {
+	// Get built-in symbols only once
+	if (builtInSymbols.size <= 0) {
+		
+		for(const includedFile of includes) {
+			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
+			
+			const fileName = path.basename(includedDoc.fileName);
+			
+			// This will place the symbols in builtInSymbols
+			getSymbolsForDocument(includedDoc, builtInSymbols, fileName);
+		}
+	}
+
+	// Clear out the current doc symbols to reload them
+	currentDocSymbols.clear();
+	const localIncludes = getImportedFiles(doc);
+
+  // Loop through included files FOR THIS DOC and add symbols for them
+  for(const includedFile of localIncludes) {
     var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
 
-    var includedSymbols = getSymbolsForDocument(includedDoc);
-
-    for(const symbol of includedSymbols) {
-      const key = `${doc.fileName}.${symbol.name}`;
-
-      for(const innerSymbol of symbol.children) {
-        const innerKey = `${key}.${innerSymbol.name}`;
-        allSymbols.set(innerKey, { symbol: innerSymbol, isTopLevel: false })
-      }
-
-      allSymbols.set(key, { symbol: symbol, isTopLevel: true });
-    }
+		const fileName = path.basename(includedDoc.fileName);
+    getSymbolsForDocument(includedDoc, currentDocSymbols, fileName);
   }
 
-  const localSymbols = getSymbolsForDocument(doc);
-
-  for(const symbol of localSymbols) {
-    const key = `${doc.fileName}.${symbol.name}`;
-
-    for(const innerSymbol of symbol.children) {
-      const innerKey = `${key}.${innerSymbol.name}`;
-      allSymbols.set(innerKey, { symbol: innerSymbol, isTopLevel: false })
-    }
-
-    allSymbols.set(key, { symbol: symbol, isTopLevel: true });
-  }
+	// Get the local doc symbols
+	const localFileName = path.basename(doc.fileName);
+  const localSymbols = getSymbolsForDocument(doc, currentDocSymbols, localFileName);
 
   return localSymbols;
 }
