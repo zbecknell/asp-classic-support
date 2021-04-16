@@ -10,6 +10,9 @@
 <body>
 <%
 Call Foo("bar")
+
+Response.Cookies("foo")
+
 %>
 </body>
 </html>

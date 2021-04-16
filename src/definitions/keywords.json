@@ -1,4 +1,10 @@
 {
+  "Region": {
+    "documentation": ""
+  },
+  "End Region": {
+    "documentation": ""
+  },
   "ByRef": {
     "documentation": ""
   },

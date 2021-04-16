@@ -1,12 +1,15 @@
-import { languages, CompletionItem, CompletionItemKind, TextDocument, Position } from "vscode";
+import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol } from "vscode";
 import definitions from "./definitions";
-import { includes, getImportsWithLocal } from "./includes";
+import { includes, getImportedFiles } from "./includes";
+import { output } from "./extension"
 import * as PATTERNS from "./patterns";
+import { allSymbols } from "./symbols";
+import { getRegionsInsideRange, replaceCharacter } from "./region";
 
-const ObjectSourceImportName = "ObjectDefs";
+const objectSourceImportName = "ObjectDefs";
 
 function getVariableCompletions(text: string, scope: string): CompletionItem[] {
-  const CIs: CompletionItem[] = []; // results
+  const results: CompletionItem[] = [];
   const foundVals = new Array<string>(); // list to prevent doubles
 
   let matches: RegExpExecArray;
@@ -32,16 +35,16 @@ function getVariableCompletions(text: string, scope: string): CompletionItem[] {
 
         ci.detail = `${matches[0]} [${scope}]`;
 
-        CIs.push(ci);
+        results.push(ci);
       }
     }
   }
 
-  return CIs;
+  return results;
 }
 
 function getFunctionCompletions(text: string, scope: string, parseParams = false): CompletionItem[] {
-  const CIs: CompletionItem[] = [];
+  const results: CompletionItem[] = [];
   const foundVals = new Array<string>();
 
   let matches: RegExpExecArray;
@@ -68,20 +71,20 @@ function getFunctionCompletions(text: string, scope: string, parseParams = false
               paramCI.documentation = paramComment[1];
           }
 
-          CIs.push(paramCI);
+          results.push(paramCI);
         }
 
       ci.detail = `${matches[2]} [${scope}]`;
 
-      CIs.push(ci);
+      results.push(ci);
     }
   }
 
-  return CIs;
+  return results;
 }
 
 function getPropertyCompletions(text: string, scope: string): CompletionItem[] {
-  const CIs: CompletionItem[] = [];
+  const results: CompletionItem[] = [];
   const foundVals = new Array<string>();
 
   let matches: RegExpExecArray;
@@ -89,6 +92,7 @@ function getPropertyCompletions(text: string, scope: string): CompletionItem[] {
     const name = matches[4];
 
     if (foundVals.indexOf(name.toLowerCase()) === -1) {
+
       foundVals.push(name.toLowerCase());
 
       const ci = new CompletionItem(name, CompletionItemKind.Property);
@@ -100,21 +104,23 @@ function getPropertyCompletions(text: string, scope: string): CompletionItem[] {
 
       ci.detail = `${matches[2]} [${scope}]`;
 
-      CIs.push(ci);
+      results.push(ci);
     }
   }
 
-  return CIs;
+  return results;
 }
 
 function getClassCompletions(text: string, scope: string): CompletionItem[] {
-  const CIs: CompletionItem[] = [];
+  const results: CompletionItem[] = [];
   const foundVals = new Array<string>();
 
   let matches: RegExpExecArray;
+
   while (matches = PATTERNS.CLASS.exec(text)) {
     const name = matches[3];
     if (foundVals.indexOf(name.toLowerCase()) === -1) {
+
       foundVals.push(name.toLowerCase());
       const ci = new CompletionItem(name, CompletionItemKind.Class);
 
@@ -124,11 +130,11 @@ function getClassCompletions(text: string, scope: string): CompletionItem[] {
       }
 
       ci.detail = `${name} [${scope}]`;
-      CIs.push(ci);
+      results.push(ci);
     }
   }
 
-  return CIs;
+  return results;
 }
 
 function getCompletions(text: string, scope: string, parseParams = false) {
@@ -140,15 +146,21 @@ function getCompletions(text: string, scope: string, parseParams = false) {
   ];
 }
 
-function getObjectMembersCode(line: string, code: string, toAddObj : CompletionItem[]): boolean {
-  const matches = { "Err": "Err", "WScript": "WScript", "Debug": "Debug", "fso": "FileSystemObject" };
-  for (const cls of ["Err", "WScript", "Debug", "fso"]) {
-    const lineClsReg = new RegExp(`.*\\b${cls}\\.\\w*`, "i");
-    const codeClsReg = new RegExp(`Class[\t ]+${matches[cls]}.+?End[\t ]+Class`, "is");
+/** Returns true if an object was found... or something? */
+function getObjectMembersCode(line: string, code: string, objectsToAdd : CompletionItem[], objectName: string): boolean {
 
-    if (lineClsReg.test(line)) {
-      const classDef = codeClsReg.exec(code);
-      toAddObj.push(...getFunctionCompletions(classDef[0], cls), ...getPropertyCompletions(classDef[0], cls));
+  for(const symbol of allSymbols) {
+    if(symbol[1].symbol.kind === SymbolKind.Class && symbol[1].symbol.name.toLowerCase() === objectName.toLowerCase()) {
+
+      for(const item of symbol[1].symbol.children) {
+
+        const completion = getCompletionFromSymbol(item);
+
+        // We've already added it, go on
+        if(objectsToAdd.some(i => i.label === completion.label && i.kind == completion.kind )) continue;
+
+        objectsToAdd.push(getCompletionFromSymbol(item));
+      }
 
       return true;
     }
@@ -157,60 +169,145 @@ function getObjectMembersCode(line: string, code: string, toAddObj : CompletionI
   return false;
 }
 
+function getCompletionFromSymbol(symbol: DocumentSymbol): CompletionItem {
+  let kind: CompletionItemKind = CompletionItemKind.Variable;
+
+  if(symbol.kind === SymbolKind.Variable) kind = CompletionItemKind.Variable;
+  if(symbol.kind === SymbolKind.Property) kind = CompletionItemKind.Property;
+  if(symbol.kind === SymbolKind.Function) kind = CompletionItemKind.Function;
+  if(symbol.kind === SymbolKind.Class) kind = CompletionItemKind.Class;
+
+  return new CompletionItem(symbol.name, kind);
+}
+
 function provideCompletionItems(doc: TextDocument, position: Position): CompletionItem[] {
-  const codeAtPosition = doc.lineAt(position).text.substring(0, position.character);
 
-  // Remove completion offerings from commented lines
-  const line = doc.lineAt(position);
-  if (line.text.charAt(line.firstNonWhitespaceCharacterIndex) === "'")
+  const regionTest = PATTERNS.isInsideAspRegion(doc, position);
+
+  // We're not in ASP, exit
+  if(!regionTest.isInsideRegion) {
     return [];
-
-  // no Completion during writing a definition, still buggy
-  if (PATTERNS.VAR_COMPLS.test(codeAtPosition))
-    return [];
-
-  // no completion within open string
-  let quoteCount = 0;
-  for (const char of codeAtPosition)
-    if (char === '"') quoteCount++;
-  if (quoteCount % 2 === 1)
-    return [];
-
-  const text = doc.getText();
-  const retCI: CompletionItem[] = [];
-
-  const ObjectSourceImport = includes.get(ObjectSourceImportName);
-
-  const localIncludes = getImportsWithLocal(doc);
-
-  // if dot is typed than show only members
-  if ((/.*\.\w*$/).test(codeAtPosition)) {
-    // eslint-disable-next-line no-empty
-    if (getObjectMembersCode(codeAtPosition, ObjectSourceImport.Content, retCI)) {} else {
-      retCI.push(...getCompletions(text, "Local"));
-
-      retCI.push(
-        ...getFunctionCompletions(ObjectSourceImport.Content, ObjectSourceImportName),
-        ...getPropertyCompletions(ObjectSourceImport.Content, ObjectSourceImportName)
-      );
-
-      for (const imp of localIncludes)
-        if (imp[0].startsWith("Import"))
-          retCI.push(...getCompletions(imp[1].Content, imp[0]));
-
-    }
-  } else { // show global members
-    retCI.push(...definitions);
-    retCI.push(...getCompletions(text, "Local", true));
-
-    retCI.push(...getClassCompletions(ObjectSourceImport.Content, ObjectSourceImportName));
-
-    for (const item of localIncludes)
-      if (item[0].startsWith("Import") || item[0] === "Global")
-        retCI.push(...getCompletions(item[1].Content, item[0]));
   }
 
-  return retCI;
+  const line = doc.lineAt(position);
+  let lineText = line.text;
+
+  // Remove completion offerings from commented lines
+  if (line.text.charAt(line.firstNonWhitespaceCharacterIndex) === "'") {
+    return [];
+  }
+
+  const interiorRegions = getRegionsInsideRange(regionTest.regions, line.range);
+
+  if(interiorRegions.length > 0) {
+
+    for (let index = 0; index < lineText.length; index++) {
+      const characterPosition = new Position(line.lineNumber, index);
+
+      let isInsideRegion = false;
+
+      // is the character inside the region?
+      for(const interiorRegion of interiorRegions) {
+        if(interiorRegion.contains(characterPosition)) {
+          // This character is inside a region
+          isInsideRegion = true;
+
+          break;
+        }
+      }
+
+      // Blank out the non-ASP stuff in this line
+      if(!isInsideRegion) {
+        lineText = replaceCharacter(lineText, " ", index);
+      }
+    }
+  }
+
+  // TODO: sanitize non-ASP code
+  const codeAtPosition = lineText.substring(0, position.character);
+
+  // No completion during writing a definition, still buggy
+  if (PATTERNS.VAR_COMPLS.test(codeAtPosition)) {
+    return [];
+  }
+
+  // No completion within open string
+  let quoteCount = 0;
+
+  for (const char of codeAtPosition) {
+    if (char === '"') quoteCount++;
+  }
+
+  // No completion inside a quote block
+  if (quoteCount % 2 === 1) {
+    return [];
+  }
+
+  const text = doc.getText();
+  const results: CompletionItem[] = [];
+
+  const objectSourceImport = includes.get(objectSourceImportName);
+
+  const localIncludes = getImportedFiles(doc);
+
+  /**  
+   * Matches when the last character typed is a dot
+   * 
+   * 1. The word preceding the dot.
+  */
+  const dotTypedMatch = /.*\b(\w+)\.\w*$/.exec(codeAtPosition);
+
+  // DOT typed, only show members!
+  if (dotTypedMatch && dotTypedMatch.length > 0) {
+
+    const objectName = dotTypedMatch[1];
+
+    output.appendLine(`Dot typed for object: ${objectName}`);
+
+    // eslint-disable-next-line no-empty
+    if (getObjectMembersCode(codeAtPosition, objectSourceImport.Content, results, objectName)) {
+
+    } 
+    else {
+
+      results.push(...getCompletions(text, "Local"));
+
+      results.push(
+        ...getFunctionCompletions(objectSourceImport.Content, objectSourceImportName),
+        ...getPropertyCompletions(objectSourceImport.Content, objectSourceImportName)
+      );
+
+      for (const includedFile of localIncludes) {
+        if (includedFile[0].startsWith("Import")) {
+          results.push(...getCompletions(includedFile[1].Content, includedFile[0]));
+        }
+      }
+    }
+  } 
+  else { 
+    // Show global members
+    // results.push(...definitions);
+    // results.push(...getCompletions(text, "Local", true));
+
+    // results.push(...getClassCompletions(objectSourceImport.Content, objectSourceImportName));
+
+    // for (const includedFile of localIncludes) {
+    //   if (includedFile[0].startsWith("Import") || includedFile[0] === "Global") {
+    //     results.push(...getCompletions(includedFile[1].Content, includedFile[0]));
+    //   }
+    // }
+
+    // TODO: make sure this works
+    for(const symbol of allSymbols) {
+
+      if(!symbol[1].isTopLevel) continue;
+
+      const item = symbol[1].symbol;
+      results.push(getCompletionFromSymbol(item));
+    }
+  }
+
+  return results;
 }
 
 export default languages.registerCompletionItemProvider(

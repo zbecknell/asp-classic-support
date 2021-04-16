@@ -1,3 +1,5 @@
+<%
+
 Option Explicit
 
 ''' <summary>An intrinsic global object that can send output to a script debugger, such as the Microsoft Script Debugger.</summary>
@@ -602,3 +604,19 @@ Private Class Picture
 	End Property
 
 End Class
+
+#Region ASP
+
+''' <summary>Used to send output to the user from the server.</summary>
+Class Response
+
+	''' <summary>Used to set or get cookie values. If the cookie does not exist, it will be created, and take the value that is specified.</summary>
+	''' <param name="name">The name of the cookie to get.</param>
+	Function Cookies(name)
+	End Function
+
+End Class
+
+#End Region
+
+%>

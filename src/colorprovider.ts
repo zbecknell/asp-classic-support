@@ -7,6 +7,7 @@ class VBSColorProvider implements vscode.DocumentColorProvider {
   private readonly MAX_COLOR = 0xff;
 
   public provideDocumentColors(doc: vscode.TextDocument): vscode.ColorInformation[] {
+
     const array = new Array<vscode.ColorInformation>();
     let matches: RegExpExecArray;
     while ((matches = PATTERNS.COLOR.exec(doc.getText())) !== null) {

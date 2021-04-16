@@ -1,6 +1,6 @@
 import { languages, SignatureHelp, SignatureInformation, ParameterInformation,
   TextDocument, Position, SignatureHelpContext, CancellationToken } from "vscode";
-import { getImportsWithLocal } from "./includes";
+import { getImportedFiles } from "./includes";
 import * as PATTERNS from "./patterns";
 
 /**
@@ -94,9 +94,17 @@ function getSignatures(text: string, docComment: string): Map<string, SignatureI
 }
 
 function provideSignatureHelp(doc: TextDocument, position: Position, _token: CancellationToken, context: SignatureHelpContext): SignatureHelp {
-  const caller = getCallInfo(doc, position);
-  if (caller === null)
+
+  // We're not in ASP, exit
+  if(!PATTERNS.isInsideAspRegion(doc, position).isInsideRegion) {
     return null;
+  }
+
+  const caller = getCallInfo(doc, position);
+
+  if (caller === null) {
+    return null;
+  }
 
   const sighelp = new SignatureHelp();
   if (context.activeSignatureHelp)
@@ -110,7 +118,7 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
     sighelp.signatures.push(...sig.filter((sig2: SignatureInformation) => sig2.parameters.length >= caller.commas));
   }
 
-  for (const item of getImportsWithLocal(doc)) {
+  for (const item of getImportedFiles(doc)) {
     if ((sig = getSignatures(item[1].Content, item[0]).get(caller.func)) !== undefined) {
       sighelp.signatures.push(...sig.filter((sig2: SignatureInformation) => sig2.parameters.length >= caller.commas));
     }

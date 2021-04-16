@@ -1,6 +1,6 @@
 import { languages, Hover, TextDocument, Position, Range, MarkdownString } from "vscode";
 import * as PATTERNS from "./patterns";
-import { getImportsWithLocal } from "./includes";
+import { getImportedFiles } from "./includes";
 
 function getHover(docText: string, lookup: string, scope: string): Hover[] {
   const results: Hover[] = [];
@@ -64,27 +64,41 @@ function getParamHover(text: string, lookup: string): Hover[] {
 }
 
 function provideHover(doc: TextDocument, position: Position): Hover {
+
+  // We're not in ASP, exit
+  if(!PATTERNS.isInsideAspRegion(doc, position).isInsideRegion) {
+    return null;
+  }
+
   const wordRange = doc.getWordRangeAtPosition(position);
   const word: string = wordRange ? doc.getText(wordRange) : "";
   const line = doc.lineAt(position).text;
 
   const hoverresults: Hover[] = [];
 
-  if (word.trim() === "")
+  if (word.trim() === "") {
     return null;
+  }
 
   if (!new RegExp(`^[^']*${word}`).test(line))
     return null;
 
   let count = 0;
-  for (let i = 0; i < position.character; i++)
-    if (line[i] === '"') count++;
-  if (count % 2 === 1)
+  for (let i = 0; i < position.character; i++) {
+    if (line[i] === '"') {
+      count++;
+    } 
+  }
+
+  if (count % 2 === 1) {
     return null;
+  }
+
   hoverresults.push(...getHover(doc.getText(), word, "Local"));
 
-  for (const ExtraDocText of getImportsWithLocal(doc))
-    hoverresults.push(...getHover(ExtraDocText[1].Content, word, ExtraDocText[0]));
+  for (const includedFile of getImportedFiles(doc)) {
+    hoverresults.push(...getHover(includedFile[1].Content, word, includedFile[0]));
+  }
 
   // hoverresult for param must be above
   hoverresults.push(...getParamHover(doc.getText(new Range(new Position(0, 0), new Position(position.line + 1, 0))), word));

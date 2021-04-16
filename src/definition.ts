@@ -1,5 +1,5 @@
 import { languages, Location, TextDocument, Position, Uri, Range } from "vscode";
-import { getImportsWithLocal } from "./includes";
+import { getImportedFiles } from "./includes";
 import * as PATTERNS from "./patterns";
 
 function findExtDef(docText: string, lookup: string, docuri: Uri): Location[] {
@@ -38,6 +38,12 @@ function GetParamDef(docText: string, lookup: string, thisUri: Uri): Location[] 
 }
 
 function provideDefinition(doc: TextDocument, position: Position): Location[] {
+
+  // We're not in ASP, exit
+  if(!PATTERNS.isInsideAspRegion(doc, position).isInsideRegion) {
+    return [];
+  }
+
   const lookupRange = doc.getWordRangeAtPosition(position);
   const lookup = doc.getText(lookupRange);
   const docText = doc.getText();
@@ -52,7 +58,7 @@ function provideDefinition(doc: TextDocument, position: Position): Location[] {
   if (match)
     posLoc.push(new Location(doc.uri, doc.positionAt(match.index)));
 
-  for (const item of getImportsWithLocal(doc))
+  for (const item of getImportedFiles(doc))
     posLoc.push(...findExtDef(item[1].Content, lookup, item[1].Uri));
 
   // def for param must be above

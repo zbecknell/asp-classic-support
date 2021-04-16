@@ -24,7 +24,8 @@ export const includes = new Map<string, IncludeFile>();
 /** Matches `<!-- #include file="myfile.asp" --> */
 export const includePattern = /<!--\s*#include\s*file="(.*?)"\s*-->/ig
 
-export function getImportsWithLocal(doc: TextDocument) : [string, IncludeFile][] {
+/** Gets any included files in the given document. */
+export function getImportedFiles(doc: TextDocument) : [string, IncludeFile][] {
   const localIncludes = [...includes];
   const processedMatches = Array<string>();
 

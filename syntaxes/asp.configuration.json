@@ -15,5 +15,11 @@
 	"indentationRules": {
 			"increaseIndentPattern": "(?i)(^\\s*\\b((Class|Else|For|Select|Case|Property|Sub|Function|With)|(Else)?If\\b.*\\bThen)\\b.*$",
 			"decreaseIndentPattern": "^(?i)\\s*\\b(End\\s\\b(Class|If|Select|Property|Sub|Function|With)\\b|Else(If)?|Case|Next|Loop|WEnd)\\b"
+	},
+	"folding": {
+		"markers": {
+			"start": "^\\s*#Region\\b",
+			"end": "^\\s*#End Region\\b"
+		}
 	}
 }

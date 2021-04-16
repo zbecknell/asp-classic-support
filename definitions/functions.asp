@@ -1,3 +1,5 @@
+<%
+
 ''' <summary>Returns the absolute value of a number.</summary>
 ''' <param name="expr">Any valid numeric expression.</param>
 Function Abs(expr) ' As Integer
@@ -747,3 +749,5 @@ Const vbYellow  = &h00FFFF
 ' Const SystemFolder = 1
 ' Const TemporaryFolder = 2
 ' Const WindowsFolder = 0
+
+%>
