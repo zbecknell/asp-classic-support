@@ -1,8 +1,9 @@
-import { languages, Hover, TextDocument, Position, Range, MarkdownString } from "vscode";
+import { languages, Hover, TextDocument, Position, Range, MarkdownString, DocumentHighlight } from "vscode";
 import * as PATTERNS from "./patterns";
 import { getImportedFiles } from "./includes";
 import { builtInSymbols, output } from "./extension";
 import { currentDocSymbols } from "./symbols";
+import { positionIsInsideAspRegion } from "./region";
 
 function getHover(docText: string, lookup: string, scope: string): Hover[] {
   const results: Hover[] = [];
@@ -65,21 +66,45 @@ function getParamHover(text: string, lookup: string): Hover[] {
     return [];
 }
 
+function getPrecedingWord(doc: TextDocument, position: Position): string {
+  const wordRange = doc.getWordRangeAtPosition(position);
+
+	// If we're at the start of the line, return nothing
+	if(wordRange.start.character <= 1) {
+		return;
+	}
+
+	const precedingCharacterIndex = wordRange.start.character - 1;
+	const lineText = doc.lineAt(position.line).text;
+	const precedingCharacter = lineText[precedingCharacterIndex];
+
+	if(precedingCharacter !== '.') {
+		return;
+	}
+
+	output.appendLine("There's a dot at the start!");
+
+	const precedingWordRange = doc.getWordRangeAtPosition(new Position(position.line, precedingCharacterIndex - 1));
+
+	return doc.getText(precedingWordRange);
+}
+
 function provideHover(doc: TextDocument, position: Position): Hover {
 
   // We're not in ASP, exit
-  if(!PATTERNS.isInsideAspRegion(doc, position).isInsideRegion) {
+  if(!positionIsInsideAspRegion(doc, position).isInsideRegion) {
     return null;
   }
 
   const wordRange = doc.getWordRangeAtPosition(position);
+
+	// Get the range of the preceding character
+	const precedingWord = getPrecedingWord(doc, position);
+
   const word: string = wordRange ? doc.getText(wordRange) : "";
   const line = doc.lineAt(position).text;
 
-
 	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols]);
-
-	output.appendLine(`All symbols count: ${allSymbols.size}`);
 
 	for(const item of allSymbols) {
 		const symbol = item.symbol;
@@ -88,7 +113,8 @@ function provideHover(doc: TextDocument, position: Position): Hover {
 
 			const content = new MarkdownString();
 
-			content.appendCodeblock(`Dim ${symbol.name}`, "vbs");
+			content.appendCodeblock(item.definition ?? symbol.name, "vbs");
+			content.appendMarkdown(`\n---\n${item.sourceFile}`);
 
 			return new Hover(content);
 		}
@@ -126,7 +152,7 @@ function provideHover(doc: TextDocument, position: Position): Hover {
   //   hoverresults.push(...getHover(includedFile[1].Content, word, includedFile[0]));
   // }
 
-  // // hoverresult for param must be above
+  //// hoverresult for param must be above
   // hoverresults.push(...getParamHover(doc.getText(new Range(new Position(0, 0), new Position(position.line + 1, 0))), word));
 
   // if (hoverresults.length > 0) {

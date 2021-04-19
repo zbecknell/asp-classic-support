@@ -1,139 +1,69 @@
-import { ExtensionContext, workspace, window, DecorationOptions, Range, TextDocument, Position } from "vscode";
+import { ExtensionContext, workspace, window, Position, languages, IndentAction, Selection } from "vscode";
 import hoverProvider from "./hover";
 import completionProvider from "./completion";
-import symbolsProvider, { AspSymbol } from "./symbols";
+import symbolsProvider from "./symbols";
 import signatureProvider from "./signature";
 import definitionProvider from "./definition";
 import colorProvider from "./colorprovider";
 import { IncludeFile, includes } from "./includes";
-import { ASP_BRACKETS } from "./patterns";
-import { AspRegion } from "./region";
+import { AspSymbol } from "./types";
+import { addRegionHighlights } from "./highlight";
 
 export const output = window.createOutputChannel("ASP Classic");
 
 /** List of all built-in ASP symbols parsed once from source files. */
 export const builtInSymbols = new Set<AspSymbol>();
 
-function specialHighlighting(context: ExtensionContext) {
-  const bracketDecorationType = window.createTextEditorDecorationType({
-		light: {
-			backgroundColor: 'rgba(255, 100, 0, .2)'
-		},
-		dark: {
-			backgroundColor: 'rgba(0, 100, 255, .2)'
-		}
+export function activate(context: ExtensionContext): void {
+
+	// When there are three ''' in a row we will auto-insert more on enter
+	languages.setLanguageConfiguration("asp", {
+		onEnterRules: [
+			{
+				// Only insert new ''' if we haven't already typed </summary>
+				beforeText: /^\s*'''((?!<\/summary>).)*$/i,
+				action: { indentAction: IndentAction.None, appendText: '\'\'\' ' }
+			}
+		],
 	});
-
-	const codeBlockDecorationType = window.createTextEditorDecorationType({
-		light: {
-			backgroundColor: 'rgba(100,100,100,0.1)'
-		},
-		dark: {
-			backgroundColor: 'rgba(220,220,220,0.1)'
-		}
-	});
-
-	let activeEditor = window.activeTextEditor;
-	if (activeEditor) {
-		triggerUpdateDecorations();
-	}
-
-	window.onDidChangeActiveTextEditor(editor => {
-		activeEditor = editor;
-		if (editor) {
-			triggerUpdateDecorations();
-		}
-	}, null, context.subscriptions);
 
 	workspace.onDidChangeTextDocument(event => {
-		if (activeEditor && event.document === activeEditor.document) {
-			triggerUpdateDecorations();
-		}
-	}, null, context.subscriptions);
+		if (window.activeTextEditor && event.document === window.activeTextEditor.document) {
+			const changes = event.contentChanges;
+	
+			// INSERT ''' <summary> line when ''' is typed
+			if(changes.length > 0 && changes[0].text === '\'') {
+				const change = changes[0];
 
-	var timeout = null;
-	function triggerUpdateDecorations() {
-		if (timeout) {
-			clearTimeout(timeout);
-		}
-		timeout = setTimeout(updateDecorations, 200);
-	}
+				// We don't have enough characters on this line to have a doc comment
+				if(change.range.end.character <= 1) {
+					return;
+				}
 
-	function updateDecorations() {
+				const document = window.activeTextEditor.document;
+				const line = document.lineAt(change.range.end.line);
 
-		const regions = getAspRegions(activeEditor.document);
+				// If our line doesn't end with ''', do nothing
+				if(!line.text.endsWith("'''")) {
+					return;
+				}
 
-		if (!regions) {
-			return;
-		}
+				const editor = window.activeTextEditor;
 
-		const blocks: Range[] = [];
-		const brackets: Range[] = [];
+				let insertPosition = change.range.end;
 
-		for(const region of regions) {
-			brackets.push(region.openingBracket);
-			blocks.push(region.codeBlock);
-			brackets.push(region.closingBracket);
-		}
-		
-		activeEditor.setDecorations(bracketDecorationType, brackets);
-		activeEditor.setDecorations(codeBlockDecorationType, blocks);
-	}
-}
+				insertPosition = new Position(insertPosition.line, insertPosition.character + 1);
+				const cursorPosition = new Position(insertPosition.line, insertPosition.character + 10);
 
-export function getAspRegions(doc: TextDocument): AspRegion[] {
-		// If we're not in an ASP context, no need to decorate
-		if (doc.languageId != "asp") {
-			return;
-		}
-
-		const text = doc.getText();
-		// const brackets: DecorationOptions[] = [];
-		const brackets: Range[] = [];
-
-		let match: RegExpExecArray;
-
-		while (match = ASP_BRACKETS.exec(text)) {
-
-			// Bracket start
-			const startPos = doc.positionAt(match.index);
-
-			// Bracket end
-			const endPos = doc.positionAt(match.index + match[0].length);
-			
-			// const decoration = { range: new Range(startPos, endPos) };
-
-			brackets.push(new Range(startPos, endPos));
-		}
-
-		let index = 0;
-		let max = brackets.length;
-
-		const aspRegions: AspRegion[] = [];
-
-		brackets.forEach(element => {
-
-			if(index + 1 < max) {
-
-
-				const start = brackets[index];
-				const end = brackets[index + 1];
-				const block = new Range(start.end, end.start);
-
-				aspRegions.push({
-					openingBracket: start,
-					codeBlock: block,
-					closingBracket: end
-				})
+				editor.edit(builder => {
+					builder.insert(insertPosition, " <summary></summary>");
+				}).then(_ => {
+					editor.selection = new Selection(cursorPosition, cursorPosition);
+				});
 			}
+		}
+	});
 
-			index += 2;
-		});
-
-		return aspRegions;
-}
-
-export function activate(context: ExtensionContext): void {
 
 	output.show();
 
@@ -145,7 +75,7 @@ export function activate(context: ExtensionContext): void {
   includes.set("Global", new IncludeFile(functionIncludesFile));
   includes.set("ObjectDefs", new IncludeFile(objectIncludesFile));
 
-  specialHighlighting(context);
+  addRegionHighlights(context);
 
   context.subscriptions.push(
     hoverProvider,

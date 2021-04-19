@@ -2,6 +2,7 @@ import { languages, SignatureHelp, SignatureInformation, ParameterInformation,
   TextDocument, Position, SignatureHelpContext, CancellationToken } from "vscode";
 import { getImportedFiles } from "./includes";
 import * as PATTERNS from "./patterns";
+import { positionIsInsideAspRegion } from "./region";
 
 /**
  * Reduces a partial line of code to the current Function for parsing
@@ -96,7 +97,7 @@ function getSignatures(text: string, docComment: string): Map<string, SignatureI
 function provideSignatureHelp(doc: TextDocument, position: Position, _token: CancellationToken, context: SignatureHelpContext): SignatureHelp {
 
   // We're not in ASP, exit
-  if(!PATTERNS.isInsideAspRegion(doc, position).isInsideRegion) {
+  if(!positionIsInsideAspRegion(doc, position).isInsideRegion) {
     return null;
   }
 

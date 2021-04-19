@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 
 import { Position, TextDocument } from "vscode";
-import { getAspRegions } from "./extension";
-import { AspRegion } from "./region";
+import { getAspRegions } from "./region";
+import { AspRegion } from "./types";
 
 /**
  * Matches a Function
@@ -13,6 +13,8 @@ import { AspRegion } from "./region";
  * 4. Signature def
  * 5. Name
  * 6. Params
+ * 
+ * [Link](https://regex101.com/r/vQ4rYJ/1)
  */
 export const FUNCTION = /((?:^[\t ]*'+.*$(?:\r\n|\n))*)^[\t ]*((?:(?:Public|Private)[\t ]+)?(Function|Sub)[\t ]+((\[?[a-z]\w*\]?)[\t ]*(?:\((.*)\))?))/img;
 
@@ -22,6 +24,8 @@ export const FUNCTION = /((?:^[\t ]*'+.*$(?:\r\n|\n))*)^[\t ]*((?:(?:Public|Priv
  * 1. Comment
  * 2. Definition
  * 3. Name
+ * 
+ * [Link](https://regex101.com/r/j2BtJ6/1)
  */
 export const CLASS = /((?:^[\t ]*'+.*$(?:\r\n|\n))*)^[\t ]*((?:(?:Public|Private)[\t ]+)?Class[\t ]+(\[?[a-z]\w*\]?))/img;
 
@@ -87,22 +91,3 @@ export const COLOR = /\b(vbBlack|vbBlue|vbCyan|vbGreen|vbMagenta|vbRed|vbWhite|v
  * 2) Closing tag 
  */
 export const ASP_BRACKETS = /(<%=|<%|%>)+/g;
-
-/** Returns true when we are inside an ASP code block. */
-export function isInsideAspRegion(doc: TextDocument, position: Position): { isInsideRegion: boolean, regions: AspRegion[]} {
-
-  const regions = getAspRegions(doc);
-
-  if(regions.length === 0) {
-    return { isInsideRegion: false, regions: regions};
-  }
-
-  for(const region of regions) {
-    if(region.codeBlock.contains(position)) {
-      return { isInsideRegion: true, regions: regions};
-    }
-  }
-
-  return { isInsideRegion: false, regions: regions};
-
-}

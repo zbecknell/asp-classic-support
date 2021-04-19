@@ -1,10 +1,8 @@
 import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol } from "vscode";
-import definitions from "./definitions";
-import { includes, getImportedFiles } from "./includes";
 import { builtInSymbols, output } from "./extension"
 import * as PATTERNS from "./patterns";
 import { currentDocSymbols } from "./symbols";
-import { getRegionsInsideRange, replaceCharacter } from "./region";
+import { getRegionsInsideRange, positionIsInsideAspRegion, replaceCharacter } from "./region";
 
 const objectSourceImportName = "ObjectDefs";
 
@@ -182,7 +180,7 @@ function getCompletionFromSymbol(symbol: DocumentSymbol): CompletionItem {
 
 function provideCompletionItems(doc: TextDocument, position: Position): CompletionItem[] {
 
-  const regionTest = PATTERNS.isInsideAspRegion(doc, position);
+  const regionTest = positionIsInsideAspRegion(doc, position);
 
   // We're not in ASP, exit
   if(!regionTest.isInsideRegion) {

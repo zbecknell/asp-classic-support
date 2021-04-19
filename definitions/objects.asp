@@ -618,7 +618,6 @@ Class Response
 	''' <summary>[A boolean value that specifies whether to buffer the page output or not.](https://www.w3schools.com/asp/prop_buffer.asp)</summary>
 	Property Get Buffer
 	End Property
-
 	
 	''' <summary>[A cache control header that can be set to "Public" or "Private".](https://www.w3schools.com/asp/prop_cachecontrol.asp)</summary>
 	Property Get CacheControl
@@ -693,6 +692,32 @@ Class Response
 
 End Class
 
-#End Region
+
+Class Request
+
+	Function ClientCertificate()
+	End Function
+
+	Function Cookies(name)
+	End Function
+	
+	Function Form(element)
+	End Function
+	
+	Function QueryString(variable)
+	End Function
+	
+	Function ServerVariables(server_variable)
+	End Function
+	
+	Property Get TotalBytes
+	End Property
+
+	Function BinaryRead(count)
+	End Function
+
+End Class
+
+#End Region ASP
 
 %>

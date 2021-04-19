@@ -1,6 +1,7 @@
 import { languages, Location, TextDocument, Position, Uri, Range } from "vscode";
 import { getImportedFiles } from "./includes";
 import * as PATTERNS from "./patterns";
+import { positionIsInsideAspRegion } from "./region";
 
 function findExtDef(docText: string, lookup: string, docuri: Uri): Location[] {
   const posloc: Location[] = [];
@@ -40,7 +41,7 @@ function GetParamDef(docText: string, lookup: string, thisUri: Uri): Location[] 
 function provideDefinition(doc: TextDocument, position: Position): Location[] {
 
   // We're not in ASP, exit
-  if(!PATTERNS.isInsideAspRegion(doc, position).isInsideRegion) {
+  if(!positionIsInsideAspRegion(doc, position).isInsideRegion) {
     return [];
   }
 

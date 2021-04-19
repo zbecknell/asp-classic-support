@@ -4,24 +4,48 @@ import { languages, SymbolKind, DocumentSymbol, Range, workspace, TextDocument, 
 import * as PATTERNS from "./patterns";
 import * as path from "path";
 import { getImportedFiles, includes } from "./includes";
-import { builtInSymbols, getAspRegions, output } from "./extension";
-import { AspRegion, getRegionsInsideRange, isInsideAspRegion, replaceCharacter } from "./region";
+import { builtInSymbols, output } from "./extension";
+import { getAspRegions, getRegionsInsideRange, regionIsInsideAspRegion, replaceCharacter } from "./region";
+import { AspSymbol } from "./types";
 
 const showVariableSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showVariableSymbols");
 const showParameterSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showParameterSymbols");
 
+/**
+ * Matches a Function
+ * 
+ * 1. Comment
+ * 2. Definition
+ * 3. Function/Sub
+ * 4. Signature def
+ * 5. Name
+ * 6. Params
+ * 
+ * [Link](https://regex101.com/r/vQ4rYJ/1)
+ */
 const FUNCTION = RegExp(PATTERNS.FUNCTION.source, "i");
 
-/** 1: comment, 2: definition, 3: name */
+/**
+ * Matches a Class
+ * 
+ * 1. Comment
+ * 2. Definition
+ * 3. Name
+ * 
+ * [Link](https://regex101.com/r/j2BtJ6/1)
+ */
 const CLASS = RegExp(PATTERNS.CLASS.source, "i");
+
+/**
+ * Matches a Property
+ * 
+ * 1. Comment
+ * 2. Definition
+ * 3. Get/Let/Set
+ * 4. Name
+ * 5. Params
+ */
 const PROP = RegExp(PATTERNS.PROP.source, "i");
-
-export interface AspSymbol {
-  symbol: DocumentSymbol;
-  isTopLevel: boolean;
-	sourceFile: string;
-}
-
 
 export const currentDocSymbols = new Set<AspSymbol>();
 
@@ -33,7 +57,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
 
   const varList: string[] = [];
 
-  const blocks: DocumentSymbol[] = [];
+  const blocks: AspSymbol[] = [];
 
   const aspRegions = getAspRegions(doc);
 
@@ -51,14 +75,16 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
     }
 
     let originalLineText = line.text;
+		let cleanLineText = line.text;
 
     // Is the line inside a region or are any regions in the line?
-    if (!isInsideAspRegion(aspRegions, line.range.start)) {
+    if (!regionIsInsideAspRegion(aspRegions, line.range.start)) {
 
       const interiorRegions = getRegionsInsideRange(aspRegions, line.range);
 
       if(interiorRegions.length > 0) {
 
+				
         for (let index = 0; index < originalLineText.length; index++) {
           const characterPosition = new Position(line.lineNumber, index);
 
@@ -76,7 +102,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
 
           // Blank out the non-ASP stuff in this line
           if(!isInsideRegion) {
-            originalLineText = replaceCharacter(originalLineText, " ", index);
+            cleanLineText = replaceCharacter(originalLineText, " ", index);
           }
         }
       } 
@@ -90,21 +116,27 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
       continue;
     }
 
-    const lineTextWithoutComment = (/^([^'\n\r]*).*$/m).exec(originalLineText);
+    const lineTextWithoutComment = (/^([^'\n\r]*).*$/m).exec(cleanLineText);
 
     for (const lineText of lineTextWithoutComment[1].split(":")) {
 
       let name: string;
-      let symbol: DocumentSymbol | null;
+			let aspSymbol: AspSymbol = {
+				isTopLevel: false,
+				sourceFile: fileName
+			};
+
+			aspSymbol.sourceFile = fileName;
 
       let matches: RegExpMatchArray | null = [];
 
       if ((matches = CLASS.exec(lineText)) !== null) {
 
         name = matches[3];
-        symbol = new DocumentSymbol(name, "", SymbolKind.Class, line.range, line.range);
+        aspSymbol.symbol = new DocumentSymbol(name, "", SymbolKind.Class, line.range, line.range);
 
-      } else if ((matches = FUNCTION.exec(lineText)) !== null) {
+      } 
+			else if ((matches = FUNCTION.exec(lineText)) !== null) {
 
         name = matches[4];
         let symKind = SymbolKind.Function;
@@ -118,12 +150,13 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
           name = matches[5];
         }
 
-        symbol = new DocumentSymbol(name, null, symKind, line.range, line.range);
+				aspSymbol.definition = matches[2];
+        aspSymbol.symbol = new DocumentSymbol(name, null, symKind, line.range, line.range);
 
         if (showParameterSymbols) {
           if (matches[6]) {
             matches[6].split(",").forEach(param => {
-              symbol.children.push(new DocumentSymbol(param.trim(), null, SymbolKind.Variable, line.range, line.range));
+              aspSymbol.symbol.children.push(new DocumentSymbol(param.trim(), null, SymbolKind.Variable, line.range, line.range));
             });
           }
         }
@@ -132,67 +165,95 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
       else if ((matches = PROP.exec(lineText)) !== null) {
 
         name = matches[4];
-        symbol = new DocumentSymbol(name, matches[3], SymbolKind.Property, line.range, line.range);
+				aspSymbol.definition = matches[2];
+        aspSymbol.symbol = new DocumentSymbol(name, null, SymbolKind.Property, line.range, line.range);
 
       } 
       else if (showVariableSymbols) {
         
         while ((matches = PATTERNS.VAR.exec(lineText)) !== null) {
 
-          const varNames = matches[2].split(",");
+					// Split multiple variables from the same line
+          const variableNames = matches[2].split(",");
 
-          for (const varname of varNames) {
+          for (const variableName of variableNames) {
 
-            const vname = varname.replace(PATTERNS.ARRAYBRACKETS, "").trim();
+            const cleanVariableName = variableName.replace(PATTERNS.ARRAYBRACKETS, "").trim();
 
-            if (varList.indexOf(vname) === -1 || !(/\bSet\b/i).test(matches[0])) { 
+						// If we don't have this variable in our list provided yet...
+            if (varList.indexOf(cleanVariableName) === -1 || !(/\bSet\b/i).test(matches[0])) { 
 
               // match multiple same Dim, but not an additional set to a dim
-              varList.push(vname);
+              varList.push(cleanVariableName);
 
               let symKind = SymbolKind.Variable;
+							aspSymbol.definition = `Dim ${cleanVariableName}`;
 
               if ((/\bConst\b/i).test(matches[1])) {
                 symKind = SymbolKind.Constant;
+								aspSymbol.definition = `Const ${cleanVariableName}`;
               }
               else if ((/\bSet\b/i).test(matches[0])) {
                 symKind = SymbolKind.Struct;
+								aspSymbol.definition = `Set ${cleanVariableName}`;
               }
-              else if ((/\w+[\t ]*\([\t ]*\d*[\t ]*\)/i).test(varname)) {
+              else if ((/\w+[\t ]*\([\t ]*\d*[\t ]*\)/i).test(variableName)) {
                 symKind = SymbolKind.Array;
               }
 
               const r = new Range(line.lineNumber, 0, line.lineNumber, PATTERNS.VAR.lastIndex);
-              const variableSymbol = new DocumentSymbol(vname, "", symKind, r, r);
 
+							aspSymbol.symbol = new DocumentSymbol(cleanVariableName, "", symKind, r, r);
+
+							// If we're not inside a block this is a top-level variable
               if (blocks.length === 0) {
-                result.push(variableSymbol);
-								collection.add({ isTopLevel: true, symbol: variableSymbol, sourceFile: fileName })
+                result.push(aspSymbol.symbol);
+
+								aspSymbol.isTopLevel = true;
               }
               else {
-                blocks[blocks.length - 1].children.push(variableSymbol);
-								collection.add({ isTopLevel: false, symbol: variableSymbol, sourceFile: fileName })
+								// We are INSIDE a block like a class or function
+								const parent = blocks[blocks.length - 1].symbol;
+
+								aspSymbol.isTopLevel = false;
+								aspSymbol.parentName = parent.name;
+
+                parent.children.push(aspSymbol.symbol);
               }
+							collection.add(aspSymbol)
             }
           }
         }
       }
 
-      if (symbol) {
+			// If we have a symbol, let's add it to our collection
+      if (aspSymbol && aspSymbol.symbol) {
 
+				// This is a top-level symbol not contained in a class, function, etc.
         if (blocks.length === 0) {
-          result.push(symbol);
-					collection.add({ isTopLevel: true, symbol: symbol, sourceFile: fileName })
+          result.push(aspSymbol.symbol);
+
+					aspSymbol.isTopLevel = true;
         }
         else {
-          blocks[blocks.length - 1].children.push(symbol);
-					collection.add({ isTopLevel: false, symbol: symbol, sourceFile: fileName })
+					// We are INSIDE a block like a class or function
+          const parent = blocks[blocks.length - 1].symbol;
+					
+					parent.children.push(aspSymbol.symbol);
+
+					aspSymbol.isTopLevel = false;
+					aspSymbol.parentName = parent.name;
         }
 
-        blocks.push(symbol);
+				collection.add(aspSymbol)
 
+				aspSymbol.regionStartLine = line.lineNumber;
+
+				// This indicates we are inside a function/sub/class with the symbol being the parent 
+        blocks.push(aspSymbol);
       }
 
+			// We should record the start and ending line of the block... really
       if ((matches = PATTERNS.ENDLINE.exec(lineText)) !== null) {
         blocks.pop();
       }
