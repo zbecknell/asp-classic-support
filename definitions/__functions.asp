@@ -296,7 +296,7 @@ End Function
 Function InputBox(prompt, title, default, xpos, ypos, helpfile, context)
 End Function
 
-''' <summary>Returns the position of the first occurrence of one string within another.</summary>
+''' <summary>[Returns the position of the first occurrence of one string within another.](https://www.w3schools.com/asp/func_instr.asp)</summary>
 ''' <param name="string1">The string to be searched</param>
 ''' <param name="string2">The string expression to search for</param>
 Function InStr(string1, string2) ' As Long

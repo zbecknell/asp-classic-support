@@ -5,6 +5,9 @@ export interface AspSymbol {
   isTopLevel: boolean;
 	sourceFile: string;
 
+	/** The full path of the source file this symbol originates from. */
+	sourceFilePath: string;
+
 	/** The definition of the symbol, e.g. `Dim someVariable` or `Class MyClass` */
 	definition?: string;
 
@@ -12,6 +15,10 @@ export interface AspSymbol {
 
 	regionStartLine?: number;
 	regionEndLine?: number;
+
+	rawCommentText?: string;
+
+	isBuiltIn: boolean;
 }
 
 export interface AspRegion {

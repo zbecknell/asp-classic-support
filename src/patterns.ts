@@ -72,7 +72,24 @@ export function DEFVAR(input: string, word: string): RegExpExecArray {
   ).exec(input);
 }
 
-export const COMMENT_SUMMARY = /(?:'''\s*<summary>|'\s*)([^<\n\r]*)(?:<\/summary>)?/i;
+/**
+ * Matches a comment summary.
+ * 
+ * 1. Summary text
+ * 
+ * [View](https://regex101.com/r/IIfp1I/1)
+ */
+export const COMMENT_SUMMARY = /(?:\s*<summary>\s*)([^<]*)(?:<\/summary>)?/im
+
+/**
+ * Matches 1 or more parameter summaries
+ * 
+ * 1. Parameter name
+ * 2. Summary text
+ * 
+ * [View](https://regex101.com/r/CMza61/1)
+ */
+export const PARAM_SUMMARIES = /(?:\s*<param name=["'](\w+)["'].*?>\s*)([^<]*)(?:<\/param>)?/img
 
 export function PARAM_SUMMARY(input: string, parameterName: string): RegExpExecArray {
   return new RegExp(`'''\\s*<param name=["']${parameterName}["']>(.*)<\\/param>`, "i").exec(input);
@@ -91,3 +108,9 @@ export const COLOR = /\b(vbBlack|vbBlue|vbCyan|vbGreen|vbMagenta|vbRed|vbWhite|v
  * 2) Closing tag 
  */
 export const ASP_BRACKETS = /(<%=|<%|%>)+/g;
+
+/** Matches lines which can be thrown away in informal doc comments like:
+ * 
+ * '********** 
+ */
+export const DOC_SEPARATOR = /['\*\s-]+$/

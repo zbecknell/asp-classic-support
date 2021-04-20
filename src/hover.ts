@@ -4,6 +4,7 @@ import { getImportedFiles } from "./includes";
 import { builtInSymbols, output } from "./extension";
 import { currentDocSymbols } from "./symbols";
 import { positionIsInsideAspRegion } from "./region";
+import { AspSymbol } from "./types";
 
 function getHover(docText: string, lookup: string, scope: string): Hover[] {
   const results: Hover[] = [];
@@ -66,8 +67,13 @@ function getParamHover(text: string, lookup: string): Hover[] {
     return [];
 }
 
+/** Looks behind a word for the preceding word: {precidingWord}.{hoverWord} */
 function getPrecedingWord(doc: TextDocument, position: Position): string {
   const wordRange = doc.getWordRangeAtPosition(position);
+
+	if(!wordRange) {
+		return;
+	}
 
 	// If we're at the start of the line, return nothing
 	if(wordRange.start.character <= 1) {
@@ -81,8 +87,6 @@ function getPrecedingWord(doc: TextDocument, position: Position): string {
 	if(precedingCharacter !== '.') {
 		return;
 	}
-
-	output.appendLine("There's a dot at the start!");
 
 	const precedingWordRange = doc.getWordRangeAtPosition(new Position(position.line, precedingCharacterIndex - 1));
 
@@ -98,11 +102,10 @@ function provideHover(doc: TextDocument, position: Position): Hover {
 
   const wordRange = doc.getWordRangeAtPosition(position);
 
-	// Get the range of the preceding character
-	const precedingWord = getPrecedingWord(doc, position);
+	// Get the parent name, like {parentName}.{hoverWord}
+	const parentName = getPrecedingWord(doc, position);
 
   const word: string = wordRange ? doc.getText(wordRange) : "";
-  const line = doc.lineAt(position).text;
 
 	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols]);
 
@@ -111,10 +114,39 @@ function provideHover(doc: TextDocument, position: Position): Hover {
 
 		if(symbol.name.toLowerCase() === word.toLowerCase()){
 
+			// We have a parent but the candidate doesn't
+			if(parentName && !item.parentName) {
+				continue;
+			}
+
+			// We have a parent name but the candidate doesn't match
+			if(parentName && item.parentName.toLowerCase() != parentName.toLowerCase()) {
+				continue;
+			}
+
+			// We have a parent name but the candidate does not
+			if(parentName && !item.parentName) {
+				continue;
+			}
+
 			const content = new MarkdownString();
 
 			content.appendCodeblock(item.definition ?? symbol.name, "vbs");
-			content.appendMarkdown(`\n---\n${item.sourceFile}`);
+
+			if (item.rawCommentText) {
+
+				content.appendMarkdown(getDocumentMarkdown(item));
+			}
+
+			if (!item.isBuiltIn) {
+
+				if(item.sourceFilePath === doc.fileName) {
+					content.appendText(`\nLocal to ${item.sourceFile}`);
+				}
+				else {
+					content.appendText(`\n${item.sourceFile}`);
+				}
+			}
 
 			return new Hover(content);
 		}
@@ -122,7 +154,27 @@ function provideHover(doc: TextDocument, position: Position): Hover {
 
 	return null;
 
+	function getDocumentMarkdown(symbol: AspSymbol): string {
 
+		let matches: RegExpMatchArray | null = [];
+
+		var text = `---\n${symbol.rawCommentText}`;
+
+		while((matches = PATTERNS.COMMENT_SUMMARY.exec(symbol.rawCommentText)) !== null) {
+			if(matches[1]) {
+				text = `---\n${matches[1]}`;
+				break;
+			}
+		}
+
+		while((matches = PATTERNS.PARAM_SUMMARIES.exec(symbol.rawCommentText)) !== null) {
+			if(matches[0]) {
+				text += `\n\n _@param_ \`${matches[1]}\` — ${matches[2]}`;
+			}
+		}
+
+		return text;
+	}
 
 
 

@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-statements */
-import { languages, SymbolKind, DocumentSymbol, Range, workspace, TextDocument, Position } from "vscode";
+import { languages, SymbolKind, DocumentSymbol, Range, workspace, TextDocument, Position, TextLine } from "vscode";
 import * as PATTERNS from "./patterns";
 import * as path from "path";
 import { getImportedFiles, includes } from "./includes";
@@ -50,7 +50,7 @@ const PROP = RegExp(PATTERNS.PROP.source, "i");
 export const currentDocSymbols = new Set<AspSymbol>();
 
 /** Gets all DocumentSymbols for the given document. */
-function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fileName: string): DocumentSymbol[] {
+function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): DocumentSymbol[] {
  
   /** The final list of symbols parsed from this document */
   const result: DocumentSymbol[] = [];
@@ -64,6 +64,9 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
   if (aspRegions.length === 0) {
     return [];
   }
+			
+	/** The file name and extension of the current doc */
+	const fileName = path.basename(doc.fileName);
 
   for (let lineNum = 0; lineNum < doc.lineCount; lineNum++) {
 
@@ -117,13 +120,17 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
     }
 
     const lineTextWithoutComment = (/^([^'\n\r]*).*$/m).exec(cleanLineText);
+		const isBuiltIn = fileName === '__objects.asp' || fileName === '__functions.asp'; 
 
     for (const lineText of lineTextWithoutComment[1].split(":")) {
 
       let name: string;
 			let aspSymbol: AspSymbol = {
 				isTopLevel: false,
-				sourceFile: fileName
+				sourceFile: fileName,
+				sourceFilePath: doc.fileName,
+				rawCommentText: getDocsForLine(line),
+				isBuiltIn: isBuiltIn,
 			};
 
 			aspSymbol.sourceFile = fileName;
@@ -133,6 +140,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
       if ((matches = CLASS.exec(lineText)) !== null) {
 
         name = matches[3];
+				aspSymbol.definition = matches[2];
         aspSymbol.symbol = new DocumentSymbol(name, "", SymbolKind.Class, line.range, line.range);
 
       } 
@@ -156,7 +164,20 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
         if (showParameterSymbols) {
           if (matches[6]) {
             matches[6].split(",").forEach(param => {
-              aspSymbol.symbol.children.push(new DocumentSymbol(param.trim(), null, SymbolKind.Variable, line.range, line.range));
+							const symbol = new DocumentSymbol(param.trim(), null, SymbolKind.Variable, line.range, line.range);
+              aspSymbol.symbol.children.push(symbol);
+
+							let parameterSymbol: AspSymbol = {
+								symbol: symbol,
+								parentName: aspSymbol.symbol.name,
+								isTopLevel: false,
+								sourceFile: fileName,
+								sourceFilePath: doc.fileName,
+								definition: `(parameter) ${symbol.name}`,
+								isBuiltIn: isBuiltIn
+							};
+
+							collection.add(parameterSymbol);
             });
           }
         }
@@ -180,6 +201,13 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
 
             const cleanVariableName = variableName.replace(PATTERNS.ARRAYBRACKETS, "").trim();
 
+						let variableSymbol: AspSymbol = {
+							isTopLevel: false,
+							sourceFile: fileName,
+							sourceFilePath: doc.fileName,
+							isBuiltIn: isBuiltIn
+						};
+
 						// If we don't have this variable in our list provided yet...
             if (varList.indexOf(cleanVariableName) === -1 || !(/\bSet\b/i).test(matches[0])) { 
 
@@ -187,15 +215,15 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
               varList.push(cleanVariableName);
 
               let symKind = SymbolKind.Variable;
-							aspSymbol.definition = `Dim ${cleanVariableName}`;
+							variableSymbol.definition = `Dim ${cleanVariableName}`;
 
               if ((/\bConst\b/i).test(matches[1])) {
                 symKind = SymbolKind.Constant;
-								aspSymbol.definition = `Const ${cleanVariableName}`;
+								variableSymbol.definition = lineText.trim().replace(/\bconst\b/i, "Const");
               }
               else if ((/\bSet\b/i).test(matches[0])) {
                 symKind = SymbolKind.Struct;
-								aspSymbol.definition = `Set ${cleanVariableName}`;
+								variableSymbol.definition = `Set ${cleanVariableName}`;
               }
               else if ((/\w+[\t ]*\([\t ]*\d*[\t ]*\)/i).test(variableName)) {
                 symKind = SymbolKind.Array;
@@ -203,24 +231,24 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
 
               const r = new Range(line.lineNumber, 0, line.lineNumber, PATTERNS.VAR.lastIndex);
 
-							aspSymbol.symbol = new DocumentSymbol(cleanVariableName, "", symKind, r, r);
+							variableSymbol.symbol = new DocumentSymbol(cleanVariableName, "", symKind, r, r);
 
 							// If we're not inside a block this is a top-level variable
               if (blocks.length === 0) {
-                result.push(aspSymbol.symbol);
+                result.push(variableSymbol.symbol);
 
-								aspSymbol.isTopLevel = true;
+								variableSymbol.isTopLevel = true;
               }
               else {
 								// We are INSIDE a block like a class or function
 								const parent = blocks[blocks.length - 1].symbol;
 
-								aspSymbol.isTopLevel = false;
-								aspSymbol.parentName = parent.name;
+								variableSymbol.isTopLevel = false;
+								variableSymbol.parentName = parent.name;
 
-                parent.children.push(aspSymbol.symbol);
+                parent.children.push(variableSymbol.symbol);
               }
-							collection.add(aspSymbol)
+							collection.add(variableSymbol)
             }
           }
         }
@@ -260,7 +288,50 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>, fi
     }
   } // next linenum
 
-  return result; 
+  return result;
+
+	/** Gets all contiguous comment text above a given line */
+	function getDocsForLine(line: TextLine): string | undefined {
+
+		// If this line itself is a comment, return
+		if(line.text[line.firstNonWhitespaceCharacterIndex] === '\'') {
+			return;
+		}
+
+		let lineNumber = line.lineNumber - 1;
+
+		const commentLines: TextLine[] = [];
+
+		while(lineNumber != -1) {
+
+			const currentLine = doc.lineAt(lineNumber);
+
+			if(currentLine.text[currentLine.firstNonWhitespaceCharacterIndex] !== '\'') {
+				break;
+			}
+
+			// If we just have a line like '************** don't count it
+			if(!PATTERNS.DOC_SEPARATOR.test(currentLine.text)){
+				commentLines.push(currentLine);
+			}
+
+			lineNumber -= 1;
+		}
+
+		// We have no comments, exit
+		if(commentLines.length <= 0) {
+			return;
+		}
+
+		let comment = "";
+
+		for(const sortedLine of commentLines.sort((a, b) => a.lineNumber - b.lineNumber)) {
+			// Replace any starting '''
+			comment += `${sortedLine.text.replace(/^\s*'+/, '')}  \n`;
+		}
+
+		return comment;
+	}
 }
 
 async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol[]> {
@@ -271,10 +342,8 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 		for(const includedFile of includes) {
 			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
 			
-			const fileName = path.basename(includedDoc.fileName);
-			
 			// This will place the symbols in builtInSymbols
-			getSymbolsForDocument(includedDoc, builtInSymbols, fileName);
+			getSymbolsForDocument(includedDoc, builtInSymbols);
 		}
 	}
 
@@ -287,12 +356,12 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
     var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
 
 		const fileName = path.basename(includedDoc.fileName);
-    getSymbolsForDocument(includedDoc, currentDocSymbols, fileName);
+    getSymbolsForDocument(includedDoc, currentDocSymbols);
   }
 
 	// Get the local doc symbols
 	const localFileName = path.basename(doc.fileName);
-  const localSymbols = getSymbolsForDocument(doc, currentDocSymbols, localFileName);
+  const localSymbols = getSymbolsForDocument(doc, currentDocSymbols);
 
   return localSymbols;
 }

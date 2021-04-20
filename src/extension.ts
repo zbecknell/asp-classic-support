@@ -69,8 +69,8 @@ export function activate(context: ExtensionContext): void {
 
 	output.appendLine("Extension activated");
 
-	var functionIncludesFile = context.asAbsolutePath("./definitions/functions.asp");
-	var objectIncludesFile = context.asAbsolutePath("./definitions/objects.asp");
+	var functionIncludesFile = context.asAbsolutePath("./definitions/__functions.asp");
+	var objectIncludesFile = context.asAbsolutePath("./definitions/__objects.asp");
 
   includes.set("Global", new IncludeFile(functionIncludesFile));
   includes.set("ObjectDefs", new IncludeFile(objectIncludesFile));
