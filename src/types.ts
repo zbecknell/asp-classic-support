@@ -16,9 +16,22 @@ export interface AspSymbol {
 	regionStartLine?: number;
 	regionEndLine?: number;
 
-	rawCommentText?: string;
+	/** A list of parameters, if they exist. */
+	parameters?: DocumentSymbol[];
+
+	documentation?: AspDocumentation;
 
 	isBuiltIn: boolean;
+}
+
+export interface AspDocumentation {
+	summary: string;
+	parameters?: AspParameterDocumentation[];
+}
+
+export interface AspParameterDocumentation {
+	name: string,
+	summary: string;
 }
 
 export interface AspRegion {

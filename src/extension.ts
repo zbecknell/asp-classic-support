@@ -1,4 +1,4 @@
-import { ExtensionContext, workspace, window, Position, languages, IndentAction, Selection } from "vscode";
+import { ExtensionContext, workspace, window, Position, languages, IndentAction, Selection, SnippetString } from "vscode";
 import hoverProvider from "./hover";
 import completionProvider from "./completion";
 import symbolsProvider from "./symbols";
@@ -53,17 +53,14 @@ export function activate(context: ExtensionContext): void {
 				let insertPosition = change.range.end;
 
 				insertPosition = new Position(insertPosition.line, insertPosition.character + 1);
-				const cursorPosition = new Position(insertPosition.line, insertPosition.character + 10);
 
-				editor.edit(builder => {
-					builder.insert(insertPosition, " <summary></summary>");
-				}).then(_ => {
-					editor.selection = new Selection(cursorPosition, cursorPosition);
-				});
+				// TODO: build a snippet with function parameters as well
+				const snippet = new SnippetString(" <summary>$1</summary>$0")
+
+				editor.insertSnippet(snippet, insertPosition)
 			}
 		}
 	});
-
 
 	output.show();
 

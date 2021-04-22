@@ -1,8 +1,8 @@
-import { languages, Hover, TextDocument, Position, Range, MarkdownString, DocumentHighlight } from "vscode";
+import { languages, Hover, TextDocument, Position, Range, MarkdownString, DocumentHighlight, SymbolKind } from "vscode";
 import * as PATTERNS from "./patterns";
 import { getImportedFiles } from "./includes";
 import { builtInSymbols, output } from "./extension";
-import { currentDocSymbols } from "./symbols";
+import { currentDocSymbols, getDocumentMarkdown, getParentOfMember } from "./symbols";
 import { positionIsInsideAspRegion } from "./region";
 import { AspSymbol } from "./types";
 
@@ -67,32 +67,6 @@ function getParamHover(text: string, lookup: string): Hover[] {
     return [];
 }
 
-/** Looks behind a word for the preceding word: {precidingWord}.{hoverWord} */
-function getPrecedingWord(doc: TextDocument, position: Position): string {
-  const wordRange = doc.getWordRangeAtPosition(position);
-
-	if(!wordRange) {
-		return;
-	}
-
-	// If we're at the start of the line, return nothing
-	if(wordRange.start.character <= 1) {
-		return;
-	}
-
-	const precedingCharacterIndex = wordRange.start.character - 1;
-	const lineText = doc.lineAt(position.line).text;
-	const precedingCharacter = lineText[precedingCharacterIndex];
-
-	if(precedingCharacter !== '.') {
-		return;
-	}
-
-	const precedingWordRange = doc.getWordRangeAtPosition(new Position(position.line, precedingCharacterIndex - 1));
-
-	return doc.getText(precedingWordRange);
-}
-
 function provideHover(doc: TextDocument, position: Position): Hover {
 
   // We're not in ASP, exit
@@ -103,7 +77,7 @@ function provideHover(doc: TextDocument, position: Position): Hover {
   const wordRange = doc.getWordRangeAtPosition(position);
 
 	// Get the parent name, like {parentName}.{hoverWord}
-	const parentName = getPrecedingWord(doc, position);
+	const parentName = getParentOfMember(doc, position);
 
   const word: string = wordRange ? doc.getText(wordRange) : "";
 
@@ -131,10 +105,16 @@ function provideHover(doc: TextDocument, position: Position): Hover {
 
 			const content = new MarkdownString();
 
-			content.appendCodeblock(item.definition ?? symbol.name, "vbs");
+			let definition = item.definition ?? symbol.name;
 
-			if (item.rawCommentText) {
+			// If this is a prop/function, put the parent name in front of the symbol name
+			if (item.parentName && (item.symbol.kind === SymbolKind.Function || item.symbol.kind === SymbolKind.Property)) {
+				definition = definition.replace(item.symbol.name, `${item.parentName}.${item.symbol.name}`);
+			}
 
+			content.appendCodeblock(definition, "vbs");
+
+			if (item.documentation) {
 				content.appendMarkdown(getDocumentMarkdown(item));
 			}
 
@@ -153,28 +133,6 @@ function provideHover(doc: TextDocument, position: Position): Hover {
 	}
 
 	return null;
-
-	function getDocumentMarkdown(symbol: AspSymbol): string {
-
-		let matches: RegExpMatchArray | null = [];
-
-		var text = `---\n${symbol.rawCommentText}`;
-
-		while((matches = PATTERNS.COMMENT_SUMMARY.exec(symbol.rawCommentText)) !== null) {
-			if(matches[1]) {
-				text = `---\n${matches[1]}`;
-				break;
-			}
-		}
-
-		while((matches = PATTERNS.PARAM_SUMMARIES.exec(symbol.rawCommentText)) !== null) {
-			if(matches[0]) {
-				text += `\n\n _@param_ \`${matches[1]}\` — ${matches[2]}`;
-			}
-		}
-
-		return text;
-	}
 
 
 

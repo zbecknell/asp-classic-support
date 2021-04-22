@@ -6,7 +6,7 @@ import * as path from "path";
 import { getImportedFiles, includes } from "./includes";
 import { builtInSymbols, output } from "./extension";
 import { getAspRegions, getRegionsInsideRange, regionIsInsideAspRegion, replaceCharacter } from "./region";
-import { AspSymbol } from "./types";
+import { AspDocumentation, AspSymbol } from "./types";
 
 const showVariableSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showVariableSymbols");
 const showParameterSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showParameterSymbols");
@@ -129,7 +129,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 				isTopLevel: false,
 				sourceFile: fileName,
 				sourceFilePath: doc.fileName,
-				rawCommentText: getDocsForLine(line),
+				documentation: getDocsForLine(line),
 				isBuiltIn: isBuiltIn,
 			};
 
@@ -161,9 +161,14 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 				aspSymbol.definition = matches[2];
         aspSymbol.symbol = new DocumentSymbol(name, null, symKind, line.range, line.range);
 
+				// PARAMETERS
         if (showParameterSymbols) {
           if (matches[6]) {
+
+						aspSymbol.parameters = [];
+
             matches[6].split(",").forEach(param => {
+
 							const symbol = new DocumentSymbol(param.trim(), null, SymbolKind.Variable, line.range, line.range);
               aspSymbol.symbol.children.push(symbol);
 
@@ -177,7 +182,9 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 								isBuiltIn: isBuiltIn
 							};
 
+							aspSymbol.parameters.push(symbol);
 							collection.add(parameterSymbol);
+
             });
           }
         }
@@ -291,7 +298,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
   return result;
 
 	/** Gets all contiguous comment text above a given line */
-	function getDocsForLine(line: TextLine): string | undefined {
+	function getDocsForLine(line: TextLine): AspDocumentation {
 
 		// If this line itself is a comment, return
 		if(line.text[line.firstNonWhitespaceCharacterIndex] === '\'') {
@@ -330,40 +337,113 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 			comment += `${sortedLine.text.replace(/^\s*'+/, '')}  \n`;
 		}
 
-		return comment;
+		let matches: RegExpMatchArray | null = [];
+
+		// Initialize documentation with the raw comment text in case we have no "real" matches below (e.g. we have just a plain comment and not ''' summary)
+		const documentation: AspDocumentation = { summary: comment };
+
+		while((matches = PATTERNS.COMMENT_SUMMARY.exec(comment)) !== null) {
+			if(matches[1]) {
+				documentation.summary = matches[1];
+				break;
+			}
+		}
+
+		while((matches = PATTERNS.PARAM_SUMMARIES.exec(comment)) !== null) {
+			if(matches[0]) {
+
+				if(!documentation.parameters) {
+					documentation.parameters = [];
+				}
+
+				documentation.parameters.push({ name: matches[1], summary: matches[2] })
+			}
+		}
+
+		return documentation;
 	}
 }
 
 async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol[]> {
 
-	// Get built-in symbols only once
-	if (builtInSymbols.size <= 0) {
-		
-		for(const includedFile of includes) {
-			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
+	try {
+		// Get built-in symbols only once
+		if (builtInSymbols.size <= 0) {
 			
-			// This will place the symbols in builtInSymbols
-			getSymbolsForDocument(includedDoc, builtInSymbols);
+			for(const includedFile of includes) {
+				var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
+				
+				// This will place the symbols in builtInSymbols
+				getSymbolsForDocument(includedDoc, builtInSymbols);
+			}
 		}
+	
+		// Clear out the current doc symbols to reload them
+		currentDocSymbols.clear();
+		const localIncludes = getImportedFiles(doc);
+	
+		// Loop through included files FOR THIS DOC and add symbols for them
+		for(const includedFile of localIncludes) {
+			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
+	
+			getSymbolsForDocument(includedDoc, currentDocSymbols);
+		}
+	
+		// Get the local doc symbols
+		const localSymbols = getSymbolsForDocument(doc, currentDocSymbols);
+	
+		// We return the local symbols as they are displayed in the document Outline
+		return localSymbols;
+	} catch (error) {
+		output.appendLine(error);
+	}
+}
+
+
+
+export function getDocumentMarkdown(symbol: AspSymbol): string {
+
+	if(!symbol.documentation) {
+		return;
 	}
 
-	// Clear out the current doc symbols to reload them
-	currentDocSymbols.clear();
-	const localIncludes = getImportedFiles(doc);
+	var text = `---\n${symbol.documentation.summary}`;
 
-  // Loop through included files FOR THIS DOC and add symbols for them
-  for(const includedFile of localIncludes) {
-    var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
+	if(!symbol.documentation.parameters){
+		return text;
+	}
 
-		const fileName = path.basename(includedDoc.fileName);
-    getSymbolsForDocument(includedDoc, currentDocSymbols);
-  }
+	for(const parameterDoc of symbol.documentation.parameters) {
+		text += `\n\n _@param_ \`${parameterDoc.name}\` — ${parameterDoc.summary}`;
+	}
 
-	// Get the local doc symbols
-	const localFileName = path.basename(doc.fileName);
-  const localSymbols = getSymbolsForDocument(doc, currentDocSymbols);
+	return text;
+}
 
-  return localSymbols;
+/** Looks behind a word for the preceding word as a parent {parent}.{position} */
+export function getParentOfMember(doc: TextDocument, position: Position): string {
+  const wordRange = doc.getWordRangeAtPosition(position);
+
+	if(!wordRange) {
+		return;
+	}
+
+	// If we're at the start of the line, return nothing
+	if(wordRange.start.character <= 1) {
+		return;
+	}
+
+	const precedingCharacterIndex = wordRange.start.character - 1;
+	const lineText = doc.lineAt(position.line).text;
+	const precedingCharacter = lineText[precedingCharacterIndex];
+
+	if(precedingCharacter !== '.') {
+		return;
+	}
+
+	const precedingWordRange = doc.getWordRangeAtPosition(new Position(position.line, precedingCharacterIndex - 1));
+
+	return doc.getText(precedingWordRange);
 }
 
 export default languages.registerDocumentSymbolProvider(
