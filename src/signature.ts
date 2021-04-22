@@ -116,6 +116,18 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
 		if(symbol.symbol.name.toLowerCase() !== caller.func.toLowerCase()) {
 			continue;
 		}
+
+		if(caller.parent && !symbol.parentName) {
+			continue;
+		}
+
+		if(!caller.parent && symbol.parentName) {
+			continue;
+		}
+
+		if(caller.parent && symbol.parentName && caller.parent.toLowerCase() !== symbol.parentName.toLowerCase()) {
+			continue;
+		}
 		
 		// Start with basic definition
 		const signature = new SignatureInformation(symbol.definition);
@@ -136,7 +148,9 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
 				if(symbol.documentation && symbol.documentation.parameters) {
 					const parameterSummary = symbol.documentation.parameters.find(p => p.name.toLocaleLowerCase() === parameter.name.toLocaleLowerCase())
 
-					parameterInfo.documentation = parameterSummary.summary;
+					if(parameterSummary) {
+						parameterInfo.documentation = parameterSummary.summary;
+					}
 				}
 
 				signature.parameters.push(parameterInfo);

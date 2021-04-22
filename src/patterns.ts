@@ -79,7 +79,7 @@ export function DEFVAR(input: string, word: string): RegExpExecArray {
  * 
  * [View](https://regex101.com/r/IIfp1I/1)
  */
-export const COMMENT_SUMMARY = /(?:\s*<summary>\s*)([^<]*)(?:<\/summary>)?/im
+export const COMMENT_SUMMARY = /(?:\s*<summary>\s*)([^<]*)(?:<\/summary>)?/img
 
 /**
  * Matches 1 or more parameter summaries

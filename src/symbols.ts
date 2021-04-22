@@ -5,7 +5,7 @@ import * as PATTERNS from "./patterns";
 import * as path from "path";
 import { getImportedFiles, includes } from "./includes";
 import { builtInSymbols, output } from "./extension";
-import { getAspRegions, getRegionsInsideRange, regionIsInsideAspRegion, replaceCharacter } from "./region";
+import { getAspRegions, getRegionsInsideRange, positionIsInsideAspRegion, regionIsInsideAspRegion, replaceCharacter } from "./region";
 import { AspDocumentation, AspSymbol } from "./types";
 
 const showVariableSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showVariableSymbols");
@@ -396,10 +396,52 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 		return localSymbols;
 	} catch (error) {
 		output.appendLine(error);
+		return null;
 	}
 }
 
+export function getSymbolAtPosition(doc: TextDocument, position: Position): AspSymbol {
+	// We're not in ASP, exit
+	if(!positionIsInsideAspRegion(doc, position).isInsideRegion) {
+		return;
+	}
 
+  const wordRange = doc.getWordRangeAtPosition(position);
+
+	// Get the parent name, like {parentName}.{hoverWord}
+	const parentName = getParentOfMember(doc, position);
+
+  const word: string = wordRange ? doc.getText(wordRange) : "";
+
+	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols]);
+
+	for(const item of allSymbols) {
+		const symbol = item.symbol;
+
+		if(symbol.name.toLowerCase() !== word.toLowerCase()){
+			continue;
+		}
+
+		// We have a parent but the candidate doesn't
+		if(parentName && !item.parentName) {
+			continue;
+		}
+
+		// We have a parent name but the candidate doesn't match
+		if(parentName && item.parentName.toLowerCase() != parentName.toLowerCase()) {
+			continue;
+		}
+
+		// We have a parent name but the candidate does not
+		if(parentName && !item.parentName) {
+			continue;
+		}
+
+		return item;
+	}
+
+	return;
+}
 
 export function getDocumentMarkdown(symbol: AspSymbol): string {
 

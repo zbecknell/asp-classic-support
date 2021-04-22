@@ -368,7 +368,9 @@ End Function
 Function IsNumeric(expr) ' As Boolean
 End Function
 
-Function IsObject(expr) ' As Boolean
+''' <summary>Bar</summary>
+''' <param name="Fooey">$2</param>
+Function IsObject(Fooey) ' As Boolean
 End Function
 
 ''' <summary>Returns a string created by joining a number of substrings contained in an array.</summary>
