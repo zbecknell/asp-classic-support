@@ -56,7 +56,7 @@ export function activate(context: ExtensionContext): void {
 					insertPosition = new Position(insertPosition.line, insertPosition.character + 1);
 	
 					// TODO: build a snippet with function parameters as well
-					const snippet = new SnippetString(" <summary>$1</summary>");
+					const snippet = new SnippetString(" <summary>$0</summary>");
 	
 					editor.insertSnippet(snippet, insertPosition);
 				}

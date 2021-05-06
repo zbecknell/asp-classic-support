@@ -107,7 +107,7 @@ export const COLOR = /\b(vbBlack|vbBlue|vbCyan|vbGreen|vbMagenta|vbRed|vbWhite|v
  * 1) Opening tag
  * 2) Closing tag 
  */
-export const ASP_BRACKETS = /(<%=|<%|%>)+/g;
+export const ASP_BRACKETS = /(<%=|<%|%>)/g;
 
 /** Matches lines which can be thrown away in informal doc comments like:
  * 
