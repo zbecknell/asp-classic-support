@@ -2,7 +2,7 @@
 	"name": "asp-classic-support",
 	"displayName": "ASP Classic Support",
 	"description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"publisher": "zbecknell",
 	"icon": "assets/logo.png",
 	"engines": {
@@ -142,7 +142,8 @@
 		"typescript": "^4.1.3",
 		"vscode-test": "^1.5.0",
 		"cpy-cli": "^2.0.0",
-		"del-cli": "^3.0.0"
+		"del-cli": "^3.0.0",
+		"vscode-debugadapter": "^1.44.0"
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
@@ -153,8 +154,5 @@
 		"test": "mocha dist/test/*.test.js",
 		"package": "vsce package",
 		"publish": "vsce publish"
-	},
-	"dependencies": {
-		"vscode-debugadapter": "^1.44.0"
 	}
 }
