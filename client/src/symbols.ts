@@ -4,7 +4,7 @@ import { languages, SymbolKind, DocumentSymbol, Range, workspace, TextDocument, 
 import * as PATTERNS from "./patterns";
 import * as path from "path";
 import { getImportedFiles, includes } from "./includes";
-import { builtInSymbols, output } from "./extension";
+import { builtInSymbols, output } from "./extension_old";
 import { getAspRegions, getRegionsInsideRange, positionIsInsideAspRegion, regionIsInsideAspRegion, replaceCharacter } from "./region";
 import { AspDocumentation, AspSymbol } from "./types";
 

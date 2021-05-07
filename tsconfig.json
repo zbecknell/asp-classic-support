@@ -3,16 +3,19 @@
 		"module": "commonjs",
 		"target": "es2019",
 		"lib": ["ES2019"],
-		"outDir": "dist",
+		"outDir": "out",
 		"rootDir": "src",
-		"sourceMap": true,
-		"resolveJsonModule": true,
-		"esModuleInterop": true,
-		"alwaysStrict": true,
-		"removeComments": true
+		"sourceMap": true
 	},
+	"include": [
+		"src"
+	],
 	"exclude": [
 		"node_modules",
 		".vscode-test"
+	],
+	"references": [
+		{ "path": "./client" },
+		{ "path": "./server" }
 	]
 }

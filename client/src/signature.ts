@@ -1,7 +1,7 @@
 import { sign } from "crypto";
 import { languages, SignatureHelp, SignatureInformation, ParameterInformation,
   TextDocument, Position, SignatureHelpContext, CancellationToken, MarkdownString } from "vscode";
-import { builtInSymbols } from "./extension";
+import { builtInSymbols } from "./extension_old";
 import * as PATTERNS from "./patterns";
 import { positionIsInsideAspRegion } from "./region";
 import { currentDocSymbols, getDocumentMarkdown, getParentOfMember } from "./symbols";

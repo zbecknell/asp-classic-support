@@ -1,5 +1,5 @@
 import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol } from "vscode";
-import { builtInSymbols, output } from "./extension"
+import { builtInSymbols, output } from "./extension_old"
 import * as PATTERNS from "./patterns";
 import { currentDocSymbols } from "./symbols";
 import { getRegionsInsideRange, positionIsInsideAspRegion, replaceCharacter } from "./region";

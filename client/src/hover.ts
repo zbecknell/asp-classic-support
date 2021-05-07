@@ -1,5 +1,5 @@
 import { languages, Hover, TextDocument, Position, MarkdownString, SymbolKind } from "vscode";
-import { output } from "./extension";
+import { output } from "./extension_old";
 import { getDocumentMarkdown, getSymbolAtPosition } from "./symbols";
 
 function provideHover(doc: TextDocument, position: Position): Hover {

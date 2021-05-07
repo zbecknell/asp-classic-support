@@ -1,8 +1,8 @@
 {
   "name": "asp-classic-support",
-  "displayName": "ASP Classic Support",
+  "displayName": "ASP Classic Supprt",
   "description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "publisher": "zbecknell",
   "icon": "assets/logo.png",
   "engines": {
@@ -24,7 +24,7 @@
     "url": "https://github.com/zbecknell/asp-classic-support/issues"
   },
   "license": "MIT",
-  "main": "./dist/extension",
+  "main": "./client/out/extension",
   "activationEvents": [
     "onLanguage:asp"
   ],
@@ -55,7 +55,8 @@
         ],
         "extensions": [
           ".asa",
-          ".asp"
+          ".asp",
+          ".inc"
         ]
       }
     ],
@@ -120,11 +121,10 @@
     "del-cli": "^3.0.0"
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "del ./dist/ && tsc -p ./ && cpy '**/*.vbs' ./dist/definitions/",
-    "lint": "eslint -c .eslintrc --ext .ts src",
-    "watch": "tsc -watch -p ./",
-    "test": "mocha dist/test/*.test.js",
+    "vscode:prepublish": "cd client && npm install && cd .. && npm run compile",
+    "compile": "tsc -b",
+    "watch": "tsc -w -b",
+    "postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
     "package": "vsce package",
     "publish": "vsce publish"
   },

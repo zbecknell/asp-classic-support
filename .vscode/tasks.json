@@ -4,22 +4,30 @@
 		{
 			"type": "npm",
 			"script": "compile",
-			//"problemMatcher": "$tsc",
-			"isBackground": true,
+			"group": "build",
 			"presentation": {
+				"panel": "dedicated",
 				"reveal": "never"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"problemMatcher": [
+				"$tsc"
+			]
 		},
 		{
 			"type": "npm",
-			"script": "lint",
-			"problemMatcher": ["$eslint-stylish"],
-			"label": "npm: lint",
-			"detail": "eslint -c .eslintrc --ext .ts src"
+			"script": "watch",
+			"isBackground": true,
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$tsc-watch"
+			]
 		}
 	]
 }

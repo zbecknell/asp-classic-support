@@ -4,8 +4,12 @@
 		"target": "es2019",
 		"lib": ["ES2019"],
 		"outDir": "out",
+		"resolveJsonModule": true,
 		"rootDir": "src",
-		"sourceMap": true
+		"sourceMap": true,
+		"esModuleInterop": true,
+		"alwaysStrict": true,
+		"removeComments": true
 	},
 	"include": ["src"],
 	"exclude": ["node_modules", ".vscode-test"]
