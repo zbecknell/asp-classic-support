@@ -5,3 +5,8 @@ dist/
 .cache
 *.vsix
 .DS_Store
+
+out
+node_modules
+client/server
+.vscode-test
