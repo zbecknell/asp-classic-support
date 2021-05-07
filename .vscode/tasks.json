@@ -4,7 +4,7 @@
 		{
 			"type": "npm",
 			"script": "compile",
-			//"problemMatcher": "$tsc",
+			"problemMatcher": "$tsc",
 			"isBackground": true,
 			"presentation": {
 				"reveal": "never"

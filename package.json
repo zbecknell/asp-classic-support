@@ -2,7 +2,7 @@
   "name": "asp-classic-support",
   "displayName": "ASP Classic Support",
   "description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "publisher": "zbecknell",
   "icon": "assets/logo.png",
   "engines": {
@@ -91,6 +91,31 @@
       "type": "object",
       "title": "ASP Classic Support",
       "properties": {
+				"asp.highlightAspRegions": {
+					"type": "boolean",
+					"default": false,
+					"description": "When true, ASP code regions are highlighted."
+				},
+				"asp.bracketLightColor": {
+					"type": "string",
+					"default": "rgba(255, 100, 0, .2)",
+					"description": "The color to highlight ASP region brackets `<% >%` when a light theme is selected."
+				},
+				"asp.bracketDarkColor": {
+					"type": "string",
+					"default": "rgba(0, 100, 255, .2)",
+					"description": "The color to highlight ASP region brackets `<% >%` when a dark theme is selected."
+				},
+				"asp.codeBlockLightColor": {
+					"type": "string",
+					"default": "rgba(100,100,100,0.1)",
+					"description": "The color to highlight ASP region code blocks when a light theme is selected."
+				},
+				"asp.codeBlockDarkColor": {
+					"type": "string",
+					"default": "rgba(220,220,220,0.1)",
+					"description": "The color to highlight ASP region code blocks when a dark theme is selected."
+				},
         "asp.showVariableSymbols": {
           "type": "boolean",
           "default": true,
@@ -121,7 +146,8 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "del ./dist/ && tsc -p ./ && cpy '**/*.vbs' ./dist/definitions/",
+    "precompile": "cpy ./definitions/*.asp ./dist/definitions",
+    "compile": "tsc -p ./",
     "lint": "eslint -c .eslintrc --ext .ts src",
     "watch": "tsc -watch -p ./",
     "test": "mocha dist/test/*.test.js",

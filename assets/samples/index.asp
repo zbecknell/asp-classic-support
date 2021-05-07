@@ -14,7 +14,6 @@
 <%
 Call Foo("bar")
 
-
 Response.Cookies("foo")
 
 %>

@@ -1,9 +1,9 @@
 {
     "editor.tabSize": 2,
     "files.exclude": {
-        "**/dist": true,
         "**/node_modules": true,
-        ".cache": true
+        ".cache": true,
+        "**/dist/": true
     },
     "search.exclude": {
         "**/node_modules/": true,
