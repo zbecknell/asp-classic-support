@@ -17,15 +17,25 @@ Function Foo(bar)
 
 	Response.CacheControl = "True"
 	Response.Buffer = false
-
+    
 	Response.Write()
-
 End Function
 
 %>
 
+<div class="foo"></div>
+
+<div>
+
 <script>
-    function aJavascriptFunction(blarg) {  <% Debug.WriteLine("Thing") %><% Response.Cookies() %>
-        var someJavascriptVariable;
+    function foo(bar) {
+        setTimeout(() => {
+            
+        }, timeout);
+        // testing
+        for (let i = 0; i < myThing.length; i++) {
+            const element = myThing[i];
+        }
+
     }
 </script>
