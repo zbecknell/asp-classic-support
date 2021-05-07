@@ -8,15 +8,31 @@
   <title>Document</title>
   <title>
   <link href="/include/test.css" />
+
+  <style>
+    .foo {
+      background-color: beige;
+      position: absolute;
+
+
+    }
+  </style>
+  <div>
+
+  </div>
+
 </head>
 <body>
 <div>
-<%
-Call Foo("bar")
+	<%
+	Call Foo("bar")
 
-Response.Cookies("foo")
+	Response.Write("foo");
 
-%>
+	%>
+</div>
+
+  <div class="foo">
 
   <table>
   <div class="foo"></div>

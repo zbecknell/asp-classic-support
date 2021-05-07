@@ -2,7 +2,7 @@
 	"name": "asp-classic-support",
 	"displayName": "ASP Classic Support",
 	"description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-	"version": "0.3.3",
+	"version": "0.4.0",
 	"publisher": "zbecknell",
 	"icon": "assets/logo.png",
 	"engines": {
@@ -26,7 +26,7 @@
 	"license": "MIT",
 	"main": "./dist/extension",
 	"activationEvents": [
-		"onLanguage:asp"
+		"onLanguage:html"
 	],
 	"repository": {
 		"type": "git",
@@ -47,7 +47,7 @@
 				"configuration": "./syntaxes/vbs.configuration.json"
 			},
 			{
-				"id": "asp",
+				"id": "html",
 				"configuration": "./syntaxes/asp.configuration.json",
 				"aliases": [
 					"ASP",
@@ -55,7 +55,8 @@
 				],
 				"extensions": [
 					".asa",
-					".asp"
+					".asp",
+					".inc"
 				]
 			}
 		],
@@ -66,7 +67,7 @@
 				"path": "./syntaxes/vbs.tmLanguage.json"
 			},
 			{
-				"language": "asp",
+				"language": "html",
 				"scopeName": "text.html.asp",
 				"path": "./syntaxes/asp.html.tmLanguage.json",
 				"embeddedLanguages": {
@@ -79,12 +80,6 @@
 					"source.json": "json",
 					"source.css": "css"
 				}
-			}
-		],
-		"snippets": [
-			{
-				"language": "asp",
-				"path": "./snippets/asp.json"
 			}
 		],
 		"configuration": {

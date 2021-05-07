@@ -82,6 +82,6 @@ class VBSColorProvider implements vscode.DocumentColorProvider {
 }
 
 export default vscode.languages.registerColorProvider(
-  { scheme: "file", language: "asp" },
+  { scheme: "file", language: "html" },
   new VBSColorProvider()
 );

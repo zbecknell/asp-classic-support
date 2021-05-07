@@ -20,4 +20,4 @@ function provideDefinition(doc: TextDocument, position: Position): Location[] {
   return symbolLocations;
 }
 
-export default languages.registerDefinitionProvider({ scheme: "file", language: "asp" }, { provideDefinition });
+export default languages.registerDefinitionProvider({ scheme: "file", language: "html" }, { provideDefinition });

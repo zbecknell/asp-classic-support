@@ -6,7 +6,9 @@
   "scopeName": "text.html.asp",
   "comment": "Classic ASP with HTML",
   "fileTypes": [
-      "asp"
+      "asp",
+			"asa",
+			"inc"
   ],
   "foldingStartMarker": "(?i)^\\s*(Public|Private)?\\s*(Class|Function|Sub|Property)\\s*([a-zA-Z_]\\w*)\\s*(\\(.*\\)\\s*)?$",
   "foldingStopMarker": "(?i)^\\s*End (Class|Function|Sub|Property)\\s*$",
@@ -42,7 +44,7 @@
                   ]
               }
           ]
-      } 
+      }
   },
 "patterns": [
   {

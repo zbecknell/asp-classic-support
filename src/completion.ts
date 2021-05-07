@@ -1,4 +1,4 @@
-import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol } from "vscode";
+import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol, Uri, commands, CompletionList } from "vscode";
 import { builtInSymbols, output } from "./extension"
 import * as PATTERNS from "./patterns";
 import { currentDocSymbols } from "./symbols";
@@ -243,9 +243,9 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 
   const results: CompletionItem[] = [];
 
-  /**  
+  /**
    * Matches when the last character typed is a dot
-   * 
+   *
    * 1. The word preceding the dot.
   */
   const dotTypedMatch = /.*\b(\w+)\.\w*$/.exec(codeAtPosition);
@@ -260,7 +260,7 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
     // eslint-disable-next-line no-empty
     if (getObjectMembersCode(results, objectName)) {
 
-    } 
+    }
     else {
 
 			// Fall back to using all available symbols
@@ -275,8 +275,8 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 			}
 
     }
-  } 
-  else { 
+  }
+  else {
 
 		// TODO: don't factor out this and above as it's copy/paste
 		// No DOT, use all available symbols
@@ -295,6 +295,6 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 }
 
 export default languages.registerCompletionItemProvider(
-  { scheme: "file", language: "asp" },
+  { scheme: "file", language: "html" },
   { provideCompletionItems }, "."
 );

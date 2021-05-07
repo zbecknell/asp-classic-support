@@ -13,32 +13,32 @@ const showParameterSymbols: boolean = workspace.getConfiguration("asp").get<bool
 
 /**
  * Matches a Function
- * 
+ *
  * 1. Comment
  * 2. Definition
  * 3. Function/Sub
  * 4. Signature def
  * 5. Name
  * 6. Params
- * 
+ *
  * [Link](https://regex101.com/r/vQ4rYJ/1)
  */
 const FUNCTION = RegExp(PATTERNS.FUNCTION.source, "i");
 
 /**
  * Matches a Class
- * 
+ *
  * 1. Comment
  * 2. Definition
  * 3. Name
- * 
+ *
  * [Link](https://regex101.com/r/j2BtJ6/1)
  */
 const CLASS = RegExp(PATTERNS.CLASS.source, "i");
 
 /**
  * Matches a Property
- * 
+ *
  * 1. Comment
  * 2. Definition
  * 3. Get/Let/Set
@@ -51,7 +51,7 @@ export const currentDocSymbols = new Set<AspSymbol>();
 
 /** Gets all DocumentSymbols for the given document. */
 function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): DocumentSymbol[] {
- 
+
   /** The final list of symbols parsed from this document */
   const result: DocumentSymbol[] = [];
 
@@ -64,7 +64,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
   if (aspRegions.length === 0) {
     return [];
   }
-			
+
 	/** The file name and extension of the current doc */
 	const fileName = path.basename(doc.fileName);
 
@@ -87,7 +87,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 
       if(interiorRegions.length > 0) {
 
-				
+
         for (let index = 0; index < originalLineText.length; index++) {
           const characterPosition = new Position(line.lineNumber, index);
 
@@ -108,7 +108,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
             cleanLineText = replaceCharacter(originalLineText, " ", index);
           }
         }
-      } 
+      }
       else {
         continue;
       }
@@ -120,7 +120,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
     }
 
     const lineTextWithoutComment = (/^([^'\n\r]*).*$/m).exec(cleanLineText);
-		const isBuiltIn = fileName === '__objects.asp' || fileName === '__functions.asp'; 
+		const isBuiltIn = fileName === '__objects.asp' || fileName === '__functions.asp';
 
     for (const lineText of lineTextWithoutComment[1].split(":")) {
 
@@ -143,7 +143,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 				aspSymbol.definition = matches[2];
         aspSymbol.symbol = new DocumentSymbol(name, "", SymbolKind.Class, line.range, line.range);
 
-      } 
+      }
 			else if ((matches = FUNCTION.exec(lineText)) !== null) {
 
         name = matches[4];
@@ -189,16 +189,16 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
           }
         }
 
-      } 
+      }
       else if ((matches = PROP.exec(lineText)) !== null) {
 
         name = matches[4];
 				aspSymbol.definition = matches[2];
         aspSymbol.symbol = new DocumentSymbol(name, null, SymbolKind.Property, line.range, line.range);
 
-      } 
+      }
       else if (showVariableSymbols) {
-        
+
         while ((matches = PATTERNS.VAR.exec(lineText)) !== null) {
 
 					// Split multiple variables from the same line
@@ -216,7 +216,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 						};
 
 						// If we don't have this variable in our list provided yet...
-            if (varList.indexOf(cleanVariableName) === -1 || !(/\bSet\b/i).test(matches[0])) { 
+            if (varList.indexOf(cleanVariableName) === -1 || !(/\bSet\b/i).test(matches[0])) {
 
               // match multiple same Dim, but not an additional set to a dim
               varList.push(cleanVariableName);
@@ -273,7 +273,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
         else {
 					// We are INSIDE a block like a class or function
           const parent = blocks[blocks.length - 1].symbol;
-					
+
 					parent.children.push(aspSymbol.symbol);
 
 					aspSymbol.isTopLevel = false;
@@ -284,7 +284,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 
 				aspSymbol.regionStartLine = line.lineNumber;
 
-				// This indicates we are inside a function/sub/class with the symbol being the parent 
+				// This indicates we are inside a function/sub/class with the symbol being the parent
         blocks.push(aspSymbol);
       }
 
@@ -369,29 +369,29 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 	try {
 		// Get built-in symbols only once
 		if (builtInSymbols.size <= 0) {
-			
+
 			for(const includedFile of includes) {
 				var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
-				
+
 				// This will place the symbols in builtInSymbols
 				getSymbolsForDocument(includedDoc, builtInSymbols);
 			}
 		}
-	
+
 		// Clear out the current doc symbols to reload them
 		currentDocSymbols.clear();
 		const localIncludes = getImportedFiles(doc);
-	
+
 		// Loop through included files FOR THIS DOC and add symbols for them
 		for(const includedFile of localIncludes) {
 			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
-	
+
 			getSymbolsForDocument(includedDoc, currentDocSymbols);
 		}
-	
+
 		// Get the local doc symbols
 		const localSymbols = getSymbolsForDocument(doc, currentDocSymbols);
-	
+
 		// We return the local symbols as they are displayed in the document Outline
 		return localSymbols;
 	} catch (error) {
@@ -489,7 +489,7 @@ export function getParentOfMember(doc: TextDocument, position: Position): string
 }
 
 export default languages.registerDocumentSymbolProvider(
-  { scheme: "file", language: "asp" },
+  { scheme: "file", language: "html" },
   { provideDocumentSymbols }
 );
 

@@ -17,7 +17,7 @@ Function Foo(bar)
 
 	Response.CacheControl = "True"
 	Response.Buffer = false
-    
+
 	Response.Write()
 End Function
 
@@ -30,7 +30,7 @@ End Function
 <script>
     function foo(bar) {
         setTimeout(() => {
-            
+
         }, timeout);
         // testing
         for (let i = 0; i < myThing.length; i++) {

@@ -62,13 +62,13 @@ function getCallInfo(doc: TextDocument, pos: Position) {
   // Acquire the text up the point where the current cursor/paren/comma is at
   const codeAtPosition = line.text.substring(0, pos.character);
   const cleanCode = getParsableCode(codeAtPosition);
-	
+
 	const func = getCurrentFunction(cleanCode);
 
 	const funcIndex = line.text.indexOf(func);
 
 	const funcPosition = new Position(pos.line, funcIndex);
-	
+
 	const parent = getParentOfMember(doc, funcPosition);
 
   return {
@@ -128,14 +128,14 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
 		if(caller.parent && symbol.parentName && caller.parent.toLowerCase() !== symbol.parentName.toLowerCase()) {
 			continue;
 		}
-		
+
 		// Start with basic definition
 		const signature = new SignatureInformation(symbol.definition);
 
 		// Add summary documentation if we have it
 		if (symbol.documentation) {
 			const markdown = new MarkdownString(symbol.documentation.summary);
-			
+
 			signature.documentation = markdown;
 		}
 
@@ -174,6 +174,6 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
 }
 
 export default languages.registerSignatureHelpProvider(
-  { language: "asp" },
+  { language: "html" },
   { provideSignatureHelp }, "(", ",", " "
 );
