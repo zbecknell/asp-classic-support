@@ -2,7 +2,7 @@
 	"name": "asp-classic-support",
 	"displayName": "ASP Classic Support",
 	"description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-	"version": "0.4.0",
+	"version": "0.4.1",
 	"publisher": "zbecknell",
 	"icon": "assets/logo.png",
 	"engines": {
@@ -124,6 +124,13 @@
 			}
 		}
 	},
+	"snippets": [
+		{
+			"language": "html",
+			"scopeName": "text.html.asp",
+			"path": "./snippets/asp.json"
+		}
+	],
 	"devDependencies": {
 		"@types/chai": "^4.2.14",
 		"@types/mocha": "^8.2.0",
