@@ -1,13 +1,23 @@
-import { languages, Hover, TextDocument, Position, MarkdownString, SymbolKind } from "vscode";
+import { languages, Hover, TextDocument, Position, MarkdownString, SymbolKind, workspace } from "vscode";
 import { output } from "./extension";
-import { getDocumentMarkdown, getSymbolAtPosition } from "./symbols";
+import { getDocsForLine, getDocumentMarkdown, getSymbolAtPosition } from "./symbols";
 
-function provideHover(doc: TextDocument, position: Position): Hover {
+async function provideHover(doc: TextDocument, position: Position): Promise<Hover> {
 
 	try {
 		const item = getSymbolAtPosition(doc, position);
 
 		if(item) {
+
+			// Get up-to-date docs for non-built-in items
+			if (!item.isBuiltIn) {
+				if(item.sourceFilePath !== doc.fileName) {
+					var externalDoc = await workspace.openTextDocument(item.sourceFilePath);
+					item.documentation = getDocsForLine(externalDoc, externalDoc.lineAt(item.symbol.range.start));
+				} else {
+					item.documentation = getDocsForLine(doc, doc.lineAt(position));
+				}
+			}
 
 			const content = new MarkdownString();
 

@@ -9,14 +9,25 @@ Class TestClass
 
 End Class
 
-''' <summary>Fooey...</summary>
-''' <param name="bar">Barry!</param>
-Function Foo(bar)
+Empty
 
-    Dim myVariable = bar
+''' <summary>A real big fooey function.</summary>
+''' <param name="bar">A bar param.</param>
+''' <param name="another">Another parameter.</param>
+''' <param name="andAnother">And another.</param>
+Function Foo(bar, another, andAnother)
+    ''' <summary>My foo variable</summary>
+    Dim myVariable
+
+    Response.Write();
+
 
 	Response.CacheControl = "True"
 	Response.Buffer = false
+
+    myVariable
+
+    Foo("Fooey", "booey", "Chooey")
 
 	Response.Write()
 End Function

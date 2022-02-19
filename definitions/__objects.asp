@@ -692,27 +692,39 @@ Class Response
 
 End Class
 
-
+''' <summary>[Used to get information from a visitor.](https://www.w3schools.com/asp/asp_ref_request.asp)</summary>
 Class Request
 
+	''' <summary>Contains all the field values stored in the client certificate.</summary>
 	Function ClientCertificate()
 	End Function
 
+	''' <summary>[Contains all the cookie values sent in a HTTP request.](https://www.w3schools.com/asp/coll_cookies_request.asp)</summary>
+	''' <param name="name">The name of the cookie.</param>
 	Function Cookies(name)
 	End Function
 	
+	''' <summary>[Contains all the form (input) values from a form that uses the post method.](https://www.w3schools.com/asp/coll_form.asp)</summary>
+	''' <param name="element">The name of the form element from which the collection is to retrieve values.</param>
 	Function Form(element)
 	End Function
 	
+	''' <summary>[Contains all the variable values in a HTTP query string.](https://www.w3schools.com/asp/coll_querystring.asp)</summary>
+	''' <param name="variable">The name of the variable in the HTTP query string to retrieve.</param>
 	Function QueryString(variable)
 	End Function
 	
+	''' <summary>[Contains all the server variable values.](https://www.w3schools.com/asp/coll_servervariables.asp)</summary>
+	''' <param name="server_variable">The name of the [server variable](https://www.w3schools.com/asp/coll_servervariables.asp#sv) to retrieve.</param>
 	Function ServerVariables(server_variable)
 	End Function
 	
+	''' <summary>[Returns the total number of bytes the client sent in the body of the request.](https://www.w3schools.com/asp/prop_totalbytes.asp)</summary>
 	Property Get TotalBytes
 	End Property
 
+	''' <summary>[Retrieves the data sent to the server from the client as part of a post request and stores it in a safe array.](https://www.w3schools.com/asp/met_binaryread.asp)</summary>
+	''' <param name="count">Specifies how many bytes to read from the client.</param>
 	Function BinaryRead(count)
 	End Function
 

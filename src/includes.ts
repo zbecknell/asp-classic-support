@@ -1,6 +1,7 @@
 import { TextDocument, Uri, workspace } from "vscode";
 import * as pathns from "path";
 import * as fs from "fs";
+import { virtualPaths } from "./extension";
 
 export class IncludeFile {
   constructor(path: string) {
@@ -23,6 +24,7 @@ export const includes = new Map<string, IncludeFile>();
 
 /** Matches `<!-- #include file="myfile.asp" --> */
 export const includePattern = /<!--\s*#include\s*file="(.*?)"\s*-->/ig
+export const virtualInclude = /<!--\s*#include\s*virtual="(.*?)"\s*-->/ig
 
 /** Gets any included files in the given document. */
 export function getImportedFiles(doc: TextDocument) : [string, IncludeFile][] {
@@ -50,7 +52,44 @@ export function getImportedFiles(doc: TextDocument) : [string, IncludeFile][] {
 
       }
       else if (fs.existsSync(`${path }.vbs`) && fs.statSync(`${path }.vbs`)?.isFile()) {
-        
+
+        localIncludes.push([
+          `Import Statement ${match[1]}`,
+          new IncludeFile(`${path}.vbs`)
+        ]);
+
+      }
+
+      processedMatches.push(match[1].toLowerCase());
+    }
+  }
+
+  // Loop through each virtual included file
+  while ((match = virtualInclude.exec(doc.getText())) !== null) {
+
+    if (processedMatches.indexOf(match[1].toLowerCase())) {
+
+			// TODO: get the real directory from virtualPaths
+      // Directory for the current doc
+			var myVirtualPath = virtualPaths.find(v => match[1].toLowerCase().includes(v.virtualPath.toLowerCase()));
+
+			if (!myVirtualPath) {
+				// TODO: show warning in console
+				return;
+			}
+
+			const path = match[1].replace(myVirtualPath.virtualPath, myVirtualPath.physicalPath);
+
+      if (fs.existsSync(path) && fs.statSync(path)?.isFile()) {
+
+        localIncludes.push([
+          `Import Statement ${match[1]}`,
+          new IncludeFile(path)
+        ]);
+
+      }
+      else if (fs.existsSync(`${path }.vbs`) && fs.statSync(`${path }.vbs`)?.isFile()) {
+
         localIncludes.push([
           `Import Statement ${match[1]}`,
           new IncludeFile(`${path}.vbs`)

@@ -6,7 +6,7 @@ import * as path from "path";
 import { getImportedFiles, includes } from "./includes";
 import { builtInSymbols, output } from "./extension";
 import { getAspRegions, getRegionsInsideRange, positionIsInsideAspRegion, regionIsInsideAspRegion, replaceCharacter } from "./region";
-import { AspDocumentation, AspSymbol } from "./types";
+import { AspDocumentation, AspSymbol, VirtualPath } from "./types";
 
 const showVariableSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showVariableSymbols");
 const showParameterSymbols: boolean = workspace.getConfiguration("asp").get<boolean>("showParameterSymbols");
@@ -129,7 +129,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
 				isTopLevel: false,
 				sourceFile: fileName,
 				sourceFilePath: doc.fileName,
-				documentation: getDocsForLine(line),
+				documentation: getDocsForLine(doc, line),
 				isBuiltIn: isBuiltIn,
 			};
 
@@ -209,6 +209,7 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
             const cleanVariableName = variableName.replace(PATTERNS.ARRAYBRACKETS, "").trim();
 
 						let variableSymbol: AspSymbol = {
+							documentation: aspSymbol.documentation,
 							isTopLevel: false,
 							sourceFile: fileName,
 							sourceFilePath: doc.fileName,
@@ -296,72 +297,73 @@ function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): D
   } // next linenum
 
   return result;
+}
 
-	/** Gets all contiguous comment text above a given line */
-	function getDocsForLine(line: TextLine): AspDocumentation {
+/** Gets all contiguous comment text above a given line */
+export function getDocsForLine(doc: TextDocument, line: TextLine): AspDocumentation {
 
-		// If this line itself is a comment, return
-		if(line.text[line.firstNonWhitespaceCharacterIndex] === '\'') {
-			return;
-		}
-
-		let lineNumber = line.lineNumber - 1;
-
-		const commentLines: TextLine[] = [];
-
-		while(lineNumber != -1) {
-
-			const currentLine = doc.lineAt(lineNumber);
-
-			if(currentLine.text[currentLine.firstNonWhitespaceCharacterIndex] !== '\'') {
-				break;
-			}
-
-			// If we just have a line like '************** don't count it
-			if(!PATTERNS.DOC_SEPARATOR.test(currentLine.text)){
-				commentLines.push(currentLine);
-			}
-
-			lineNumber -= 1;
-		}
-
-		// We have no comments, exit
-		if(commentLines.length <= 0) {
-			return;
-		}
-
-		let comment = "";
-
-		for(const sortedLine of commentLines.sort((a, b) => a.lineNumber - b.lineNumber)) {
-			// Replace any starting '''
-			comment += `${sortedLine.text.replace(/^\s*'+/, '')}  \n`;
-		}
-
-		let matches: RegExpMatchArray | null = [];
-
-		// Initialize documentation with the raw comment text in case we have no "real" matches below (e.g. we have just a plain comment and not ''' summary)
-		const documentation: AspDocumentation = { summary: comment };
-
-		while((matches = PATTERNS.COMMENT_SUMMARY.exec(comment)) !== null) {
-			if(matches[1]) {
-				documentation.summary = matches[1];
-				break;
-			}
-		}
-
-		while((matches = PATTERNS.PARAM_SUMMARIES.exec(comment)) !== null) {
-			if(matches[0]) {
-
-				if(!documentation.parameters) {
-					documentation.parameters = [];
-				}
-
-				documentation.parameters.push({ name: matches[1], summary: matches[2] })
-			}
-		}
-
-		return documentation;
+	// If this line itself is a comment, return
+	if(line.text[line.firstNonWhitespaceCharacterIndex] === '\'') {
+		return;
 	}
+
+	let lineNumber = line.lineNumber - 1;
+
+	const commentLines: TextLine[] = [];
+
+	while(lineNumber != -1) {
+
+		const currentLine = doc.lineAt(lineNumber);
+
+		if(currentLine.text[currentLine.firstNonWhitespaceCharacterIndex] !== '\'') {
+			break;
+		}
+
+		// If we just have a line like '************** don't count it
+		if(!PATTERNS.DOC_SEPARATOR.test(currentLine.text)){
+			commentLines.push(currentLine);
+		}
+
+		lineNumber -= 1;
+	}
+
+	// We have no comments, exit
+	if(commentLines.length <= 0) {
+		return;
+	}
+
+	let comment = "";
+
+	for(const sortedLine of commentLines.sort((a, b) => a.lineNumber - b.lineNumber)) {
+		// Replace any starting '''
+		comment += `${sortedLine.text.replace(/^\s*'+/, '')}  \n`;
+	}
+
+	let matches: RegExpMatchArray | null = [];
+
+	// Initialize documentation with the raw comment text in case we have no "real" matches below (e.g. we have just a plain comment and not ''' summary)
+	const documentation: AspDocumentation = { rawSummary: comment };
+
+	PATTERNS.COMMENT_SUMMARY.lastIndex = 0;
+
+	const summaryMatch = PATTERNS.COMMENT_SUMMARY.exec(comment);
+
+	if(summaryMatch && summaryMatch[1]) {
+		documentation.summary = summaryMatch[1];
+	}
+
+	while((matches = PATTERNS.PARAM_SUMMARIES.exec(comment)) !== null) {
+		if(matches[0]) {
+
+			if(!documentation.parameters) {
+				documentation.parameters = [];
+			}
+
+			documentation.parameters.push({ name: matches[1], summary: matches[2] })
+		}
+	}
+
+	return documentation;
 }
 
 async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol[]> {
@@ -449,7 +451,7 @@ export function getDocumentMarkdown(symbol: AspSymbol): string {
 		return;
 	}
 
-	var text = `---\n${symbol.documentation.summary}`;
+	var text = `---\n${symbol.documentation.summary ?? symbol.documentation.rawSummary}`;
 
 	if(!symbol.documentation.parameters){
 		return text;

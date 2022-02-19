@@ -3,8 +3,8 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "compile",
-			"problemMatcher": "$tsc",
+			"script": "watch",
+			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
 			"presentation": {
 				"reveal": "never"
@@ -14,6 +14,19 @@
 				"isDefault": true
 			}
 		},
+		// {
+		// 	"type": "npm",
+		// 	"script": "compile",
+		// 	"problemMatcher": "$tsc",
+		// 	"isBackground": true,
+		// 	"presentation": {
+		// 		"reveal": "never"
+		// 	},
+		// 	"group": {
+		// 		"kind": "build",
+		// 		"isDefault": false
+		// 	}
+		// },
 		{
 			"type": "npm",
 			"script": "lint",

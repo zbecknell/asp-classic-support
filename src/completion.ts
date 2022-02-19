@@ -1,163 +1,31 @@
-import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol, Uri, commands, CompletionList } from "vscode";
+import { languages, CompletionItem, CompletionItemKind, TextDocument, Position, SymbolKind, DocumentSymbol, Uri, commands, MarkdownString } from "vscode";
 import { builtInSymbols, output } from "./extension"
 import * as PATTERNS from "./patterns";
-import { currentDocSymbols } from "./symbols";
+import { currentDocSymbols, getDocsForLine } from "./symbols";
 import { getRegionsInsideRange, positionIsInsideAspRegion, replaceCharacter } from "./region";
-
-const objectSourceImportName = "ObjectDefs";
-
-function getVariableCompletions(text: string, scope: string): CompletionItem[] {
-  const results: CompletionItem[] = [];
-  const foundVals = new Array<string>(); // list to prevent doubles
-
-  let matches: RegExpExecArray;
-  while (matches = PATTERNS.VAR.exec(text)) {
-    for (const match of matches[2].split(",")) {
-      const name = match.replace(PATTERNS.ARRAYBRACKETS, "").trim();
-      if (foundVals.indexOf(name.toLowerCase()) === -1) {
-        foundVals.push(name.toLowerCase());
-
-        let itmKind = CompletionItemKind.Variable;
-
-        if ((/\bconst\b/i).test(matches[1]))
-          itmKind = CompletionItemKind.Constant;
-
-        const ci = new CompletionItem(name, itmKind);
-        ci.documentation = matches[3];
-
-        if (new RegExp(PATTERNS.COLOR, "i").test(name)) {
-          ci.kind = CompletionItemKind.Color;
-          ci.filterText = `ColorConstants.${name}`;
-          ci.insertText = name;
-        }
-
-        ci.detail = `${matches[0]} [${scope}]`;
-
-        results.push(ci);
-      }
-    }
-  }
-
-  return results;
-}
-
-function getFunctionCompletions(text: string, scope: string, parseParams = false): CompletionItem[] {
-  const results: CompletionItem[] = [];
-  const foundVals = new Array<string>();
-
-  let matches: RegExpExecArray;
-  while (matches = PATTERNS.FUNCTION.exec(text)) {
-    const name = matches[5];
-
-    if (foundVals.indexOf(name.toLowerCase()) === -1) {
-      foundVals.push(name.toLowerCase());
-
-      const ci = new CompletionItem(name, CompletionItemKind.Function);
-
-      if (matches[1]) {
-        const summary = PATTERNS.COMMENT_SUMMARY.exec(matches[1]);
-        ci.documentation = summary?.[1];
-      }
-
-      // currently only parse in local document, but for all functions, since there is no context
-      if (parseParams && matches[6])
-        for (const param of matches[6].split(",")) {
-          const paramCI = new CompletionItem(param.trim(), CompletionItemKind.Variable);
-          if (matches[1]) {
-            const paramComment = PATTERNS.PARAM_SUMMARY(matches[1], param.trim());
-            if (paramComment)
-              paramCI.documentation = paramComment[1];
-          }
-
-          results.push(paramCI);
-        }
-
-      ci.detail = `${matches[2]} [${scope}]`;
-
-      results.push(ci);
-    }
-  }
-
-  return results;
-}
-
-function getPropertyCompletions(text: string, scope: string): CompletionItem[] {
-  const results: CompletionItem[] = [];
-  const foundVals = new Array<string>();
-
-  let matches: RegExpExecArray;
-  while (matches = PATTERNS.PROP.exec(text)) {
-    const name = matches[4];
-
-    if (foundVals.indexOf(name.toLowerCase()) === -1) {
-
-      foundVals.push(name.toLowerCase());
-
-      const ci = new CompletionItem(name, CompletionItemKind.Property);
-
-      if (matches[1]) {
-        const summary = PATTERNS.COMMENT_SUMMARY.exec(matches[1]);
-        ci.documentation = summary?.[1];
-      }
-
-      ci.detail = `${matches[2]} [${scope}]`;
-
-      results.push(ci);
-    }
-  }
-
-  return results;
-}
-
-function getClassCompletions(text: string, scope: string): CompletionItem[] {
-  const results: CompletionItem[] = [];
-  const foundVals = new Array<string>();
-
-  let matches: RegExpExecArray;
-
-  while (matches = PATTERNS.CLASS.exec(text)) {
-    const name = matches[3];
-    if (foundVals.indexOf(name.toLowerCase()) === -1) {
-
-      foundVals.push(name.toLowerCase());
-      const ci = new CompletionItem(name, CompletionItemKind.Class);
-
-      if (matches[1]) {
-        const summary = PATTERNS.COMMENT_SUMMARY.exec(matches[1]);
-        ci.documentation = summary?.[1];
-      }
-
-      ci.detail = `${name} [${scope}]`;
-      results.push(ci);
-    }
-  }
-
-  return results;
-}
-
-function getCompletions(text: string, scope: string, parseParams = false) {
-  return [
-    ...getVariableCompletions(text, scope),
-    ...getFunctionCompletions(text, scope, parseParams),
-    ...getPropertyCompletions(text, scope),
-    ...getClassCompletions(text, scope)
-  ];
-}
+import { should } from "chai";
 
 /** Returns true if an object was found... or something? */
 function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: string): boolean {
 
   for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
+
     if(symbol.symbol.kind === SymbolKind.Class && symbol.symbol.name.toLowerCase() === objectName.toLowerCase()) {
 
       for(const item of symbol.symbol.children) {
-
+        
         const completion = getCompletionFromSymbol(item);
+
+        const documentation = getDocumentationForSymbol(item, objectName);
+
+        if(documentation) {
+          completion.documentation = new MarkdownString(documentation);
+        }
 
         // We've already added it, go on
         if(objectsToAdd.some(i => i.label === completion.label && i.kind == completion.kind )) continue;
 
-        objectsToAdd.push(getCompletionFromSymbol(item));
+        objectsToAdd.push(completion);
       }
 
       return true;
@@ -165,6 +33,16 @@ function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: strin
   }
 
   return false;
+}
+
+function getDocumentationForSymbol(symbol: DocumentSymbol, parentName: string): string {
+  for(const aspSymbol of [...currentDocSymbols, ...builtInSymbols]) {
+    if(aspSymbol.symbol.name !== symbol.name || aspSymbol.parentName?.toLowerCase() !== parentName.toLowerCase()) {
+      continue;
+    }
+
+    return aspSymbol.documentation?.summary;
+  }
 }
 
 function getCompletionFromSymbol(symbol: DocumentSymbol): CompletionItem {
@@ -269,6 +147,11 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 				const completion = getCompletionFromSymbol(symbol.symbol);
 
 				if(!symbol.isTopLevel) continue;
+      
+        if(symbol.documentation && symbol.documentation.summary) {
+          completion.documentation = new MarkdownString(symbol.documentation.summary);
+        }
+
 				if(results.some(i => i.label === completion.label && i.kind == completion.kind )) continue;
 
 				results.push(completion);
@@ -278,13 +161,25 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
   }
   else {
 
+    // TODO: get context (what class or function are we in?)
+    const scope = getScope();
+
 		// TODO: don't factor out this and above as it's copy/paste
 		// No DOT, use all available symbols
     for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
 
 			const completion = getCompletionFromSymbol(symbol.symbol);
 
-      if(!symbol.isTopLevel) continue;
+      // if the symbol is not top level or does not live in this context, skip it
+      if(!symbol.isTopLevel && symbol.parentName.toLowerCase() !== scope?.toLowerCase()) {
+        continue;
+      }
+    
+      if(symbol.documentation && symbol.documentation.summary) {
+        completion.documentation = new MarkdownString(symbol.documentation.summary);
+      }
+
+      // Do we already have this completion in our results? Skip.
 			if(results.some(i => i.label === completion.label && i.kind == completion.kind )) continue;
 
       results.push(completion);
@@ -292,6 +187,58 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
   }
 
   return results;
+
+  function getScope(): string {
+
+    let shouldSearchFunctionScope = true;
+
+    for (let index = position.line - 1; index >= 0; index--) {
+      const currentLine = doc.lineAt(index);
+
+      if(currentLine.isEmptyOrWhitespace) {
+        continue;
+      }
+
+      if(currentLine.text[currentLine.firstNonWhitespaceCharacterIndex] === "'") {
+        continue;
+      }
+
+      // We're outside of a class, hence in the global scope
+      if(currentLine.text.toLowerCase().indexOf("end class") > -1) {
+        return null;
+      }
+
+      if(currentLine.text.toLowerCase().indexOf("end function") > -1) {
+        shouldSearchFunctionScope = false;
+      }
+
+      if(shouldSearchFunctionScope) {
+        var functionMatch = PATTERNS.FUNCTION.exec(currentLine.text);
+  
+        if(functionMatch && functionMatch[5]) {
+          const name = functionMatch[5];
+  
+          output.appendLine(`Scope found: ${name}`);
+  
+          return name;
+        }
+      }
+
+      var classMatch = PATTERNS.CLASS.exec(currentLine.text);
+      
+      if(classMatch && classMatch[3]) {
+        const name = classMatch[3];
+
+        output.appendLine(`Scope found: ${name}`);
+
+        return name;
+      }
+
+    }
+
+    // Didn't find anything -- global scope
+    return null;
+  }
 }
 
 export default languages.registerCompletionItemProvider(

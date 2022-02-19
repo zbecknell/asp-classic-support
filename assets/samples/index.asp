@@ -1,4 +1,6 @@
 <!-- #include file="include/utilities.asp" -->
+<!-- #include virtual="Desktop/Virtual/test.asp" -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,6 +30,8 @@
 	Call Foo("bar")
 
 	Response.Write("foo");
+
+	Call VirtualFoo();
 
 	%>
 </div>

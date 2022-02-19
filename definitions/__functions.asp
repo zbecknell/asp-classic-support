@@ -646,9 +646,22 @@ Const vbByte = 17
 Const vbArray = 8192
 ''' End Enum ' VbVarType
 
-Const Nothing = Nothing
-Const Empty = Empty ' The Empty keyword is used to indicate an uninitialized variable value. This is not the same thing as Null. You can use the IsEmpty Function to determine whether a variable is initialized.
-Const Null = Null
+''' <summary>Used to indicate an uninitialized object value, or to disassociate an object variable from an object to release system resources.</summary>
+Const Nothing
+
+''' <summary>Used to indicate an uninitialized variable value. A variable value is uninitialized when it is first created and no value is assigned to it, or when a variable value is explicitly set to empty.
+''' 
+''' ### Example
+''' ```vbs
+''' Dim x   'the variable x is uninitialized!
+''' x = "ff"   'the variable x is NOT uninitialized anymore
+''' x = Empty   'the variable x is uninitialized!
+''' ```
+''' ### _**NOTE**: This is not the same as `Null`!_
+''' </summary>
+Const Empty
+
+Const Null
 
 Const False = False ' Boolean
 Const True = True

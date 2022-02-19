@@ -25,7 +25,8 @@ export interface AspSymbol {
 }
 
 export interface AspDocumentation {
-	summary: string;
+	rawSummary: string;
+	summary?: string;
 	parameters?: AspParameterDocumentation[];
 }
 
@@ -38,4 +39,9 @@ export interface AspRegion {
 	openingBracket: Range;
 	codeBlock: Range;
 	closingBracket: Range;
+}
+
+export interface VirtualPath {
+	virtualPath: string;
+	physicalPath: string;
 }
