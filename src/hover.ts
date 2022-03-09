@@ -55,6 +55,6 @@ async function provideHover(doc: TextDocument, position: Position): Promise<Hove
 }
 
 export default languages.registerHoverProvider(
-  { scheme: "file", language: "html" },
+  { scheme: "file", language: "asp" },
   { provideHover }
 );

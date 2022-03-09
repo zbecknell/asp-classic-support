@@ -491,7 +491,7 @@ export function getParentOfMember(doc: TextDocument, position: Position): string
 }
 
 export default languages.registerDocumentSymbolProvider(
-  { scheme: "file", language: "html" },
+  { scheme: "file", language: "asp" },
   { provideDocumentSymbols }
 );
 

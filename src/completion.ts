@@ -13,7 +13,7 @@ function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: strin
     if(symbol.symbol.kind === SymbolKind.Class && symbol.symbol.name.toLowerCase() === objectName.toLowerCase()) {
 
       for(const item of symbol.symbol.children) {
-        
+
         const completion = getCompletionFromSymbol(item);
 
         const documentation = getDocumentationForSymbol(item, objectName);
@@ -147,7 +147,7 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 				const completion = getCompletionFromSymbol(symbol.symbol);
 
 				if(!symbol.isTopLevel) continue;
-      
+
         if(symbol.documentation && symbol.documentation.summary) {
           completion.documentation = new MarkdownString(symbol.documentation.summary);
         }
@@ -174,7 +174,7 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
       if(!symbol.isTopLevel && symbol.parentName.toLowerCase() !== scope?.toLowerCase()) {
         continue;
       }
-    
+
       if(symbol.documentation && symbol.documentation.summary) {
         completion.documentation = new MarkdownString(symbol.documentation.summary);
       }
@@ -214,18 +214,18 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 
       if(shouldSearchFunctionScope) {
         var functionMatch = PATTERNS.FUNCTION.exec(currentLine.text);
-  
+
         if(functionMatch && functionMatch[5]) {
           const name = functionMatch[5];
-  
+
           output.appendLine(`Scope found: ${name}`);
-  
+
           return name;
         }
       }
 
       var classMatch = PATTERNS.CLASS.exec(currentLine.text);
-      
+
       if(classMatch && classMatch[3]) {
         const name = classMatch[3];
 
@@ -242,6 +242,6 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 }
 
 export default languages.registerCompletionItemProvider(
-  { scheme: "file", language: "html" },
+  { scheme: "file", language: "asp" },
   { provideCompletionItems }, "."
 );

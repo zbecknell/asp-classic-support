@@ -21,7 +21,7 @@ export function activate(context: ExtensionContext): void {
 
 	try {
 		// When there are three ''' in a row we will auto-insert more on enter
-		languages.setLanguageConfiguration("html", {
+		languages.setLanguageConfiguration("asp", {
 			onEnterRules: [
 				{
 					// Only insert new ''' if we haven't already typed </summary>

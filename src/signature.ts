@@ -174,6 +174,6 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
 }
 
 export default languages.registerSignatureHelpProvider(
-  { language: "html" },
+  { language: "asp" },
   { provideSignatureHelp }, "(", ",", " "
 );

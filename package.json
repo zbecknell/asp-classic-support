@@ -2,7 +2,7 @@
 	"name": "asp-classic-support",
 	"displayName": "ASP Classic Support",
 	"description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"publisher": "zbecknell",
 	"icon": "assets/logo.png",
 	"engines": {
@@ -26,7 +26,7 @@
 	"license": "MIT",
 	"main": "./dist/extension",
 	"activationEvents": [
-		"onLanguage:html"
+		"onLanguage:asp"
 	],
 	"repository": {
 		"type": "git",
@@ -47,11 +47,10 @@
 				"configuration": "./syntaxes/vbs.configuration.json"
 			},
 			{
-				"id": "html",
+				"id": "asp",
 				"configuration": "./syntaxes/asp.configuration.json",
 				"aliases": [
-					"ASP",
-					"asp"
+					"ASP"
 				],
 				"extensions": [
 					".asa",
@@ -67,7 +66,7 @@
 				"path": "./syntaxes/vbs.tmLanguage.json"
 			},
 			{
-				"language": "html",
+				"language": "asp",
 				"scopeName": "text.html.asp",
 				"path": "./syntaxes/asp.html.tmLanguage.json",
 				"embeddedLanguages": {
@@ -120,21 +119,13 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show parameters in outline"
-				},
-				"asp.virtualPaths": {
-					"type": "object",
-					"additionalProperties": {
-            "type": "string"
-          },
-					"default": {},
-					"description": "A list of virtual paths where `Item` is the virtual path and `Value` is the full physical path. When using a virtual include base virtual path will be used to search for included files."
 				}
 			}
 		}
 	},
 	"snippets": [
 		{
-			"language": "html",
+			"language": "asp",
 			"scopeName": "text.html.asp",
 			"path": "./snippets/asp.json"
 		}
