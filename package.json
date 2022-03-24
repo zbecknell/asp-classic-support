@@ -2,7 +2,7 @@
 	"name": "asp-classic-support",
 	"displayName": "ASP Classic Support",
 	"description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"publisher": "zbecknell",
 	"icon": "assets/logo.png",
 	"engines": {
@@ -119,6 +119,14 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show parameters in outline"
+				},
+				"asp.virtualPaths": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					},
+					"default": {},
+					"description": "A list of virtual paths where `Item` is the virtual path and `Value` is the full physical path. When using a virtual include base virtual path will be used to search for included files."
 				}
 			}
 		}
