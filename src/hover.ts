@@ -15,7 +15,7 @@ async function provideHover(doc: TextDocument, position: Position): Promise<Hove
 					var externalDoc = await workspace.openTextDocument(item.sourceFilePath);
 					item.documentation = getDocsForLine(externalDoc, externalDoc.lineAt(item.symbol.range.start));
 				} else {
-					item.documentation = getDocsForLine(doc, doc.lineAt(position));
+					item.documentation = getDocsForLine(doc, doc.lineAt(item.symbol.range.start));
 				}
 			}
 
