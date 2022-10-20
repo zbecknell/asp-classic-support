@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2022-10-20
+
+- Fix incorrect hover documentation. Thank you [AlmarAubel](https://github.com/zbecknell/asp-classic-support/pull/16)!
+
 ## [0.5.2] - 2022-03-24
 
 - Fix virtual paths regression.
