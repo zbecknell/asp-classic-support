@@ -6,6 +6,7 @@ name: Deploy Extension
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: Default
     steps:
       - uses: actions/checkout@v2
       - run: npm install
