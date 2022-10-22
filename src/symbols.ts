@@ -48,7 +48,9 @@ const CLASS = RegExp(PATTERNS.CLASS.source, "i");
 const PROP = RegExp(PATTERNS.PROP.source, "i");
 
 const docSymbols = new Map <string, Set<AspSymbol>>();
-export const currentDocSymbols = (docFileName: string) => docSymbols.has(docFileName) ? docSymbols.get(docFileName) : new Set<AspSymbol>();
+export const currentDocSymbols = (docFileName: string) => docSymbols.has(docFileName) ?
+	docSymbols.get(docFileName) :
+	new Set<AspSymbol>();
 
 /** Gets all DocumentSymbols for the given document. */
 function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): DocumentSymbol[] {
@@ -381,7 +383,7 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 			}
 		}
 
-
+		// Todo clear out symbols from files which are not longer opened in editor.
 		if (!docSymbols.has(doc.fileName)) {
 			docSymbols.set(doc.fileName, new Set<AspSymbol>())
 		}
