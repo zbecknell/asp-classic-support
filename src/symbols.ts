@@ -47,7 +47,8 @@ const CLASS = RegExp(PATTERNS.CLASS.source, "i");
  */
 const PROP = RegExp(PATTERNS.PROP.source, "i");
 
-export const currentDocSymbols = new Set<AspSymbol>();
+const docSymbols = new Map <string, Set<AspSymbol>>();
+export const currentDocSymbols = (docFileName: string) => docSymbols.has(docFileName) ? docSymbols.get(docFileName) : new Set<AspSymbol>();
 
 /** Gets all DocumentSymbols for the given document. */
 function getSymbolsForDocument(doc: TextDocument, collection: Set<AspSymbol>): DocumentSymbol[] {
@@ -380,19 +381,24 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 			}
 		}
 
+
+		if (!docSymbols.has(doc.fileName)) {
+			docSymbols.set(doc.fileName, new Set<AspSymbol>())
+		}
+
 		// Clear out the current doc symbols to reload them
-		currentDocSymbols.clear();
+		currentDocSymbols(doc.fileName).clear();
 		const localIncludes = getImportedFiles(doc);
 
 		// Loop through included files FOR THIS DOC and add symbols for them
 		for(const includedFile of localIncludes) {
 			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
 
-			getSymbolsForDocument(includedDoc, currentDocSymbols);
+			getSymbolsForDocument(includedDoc, currentDocSymbols(doc.fileName));
 		}
 
 		// Get the local doc symbols
-		const localSymbols = getSymbolsForDocument(doc, currentDocSymbols);
+		const localSymbols = getSymbolsForDocument(doc, currentDocSymbols(doc.fileName));
 
 		// We return the local symbols as they are displayed in the document Outline
 		return localSymbols;
@@ -415,7 +421,7 @@ export function getSymbolAtPosition(doc: TextDocument, position: Position): AspS
 
   const word: string = wordRange ? doc.getText(wordRange) : "";
 
-	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols]);
+	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols(doc.fileName)]);
 
 	for(const item of allSymbols) {
 		const symbol = item.symbol;
