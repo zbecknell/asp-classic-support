@@ -5,3 +5,4 @@ dist/
 .cache
 *.vsix
 .DS_Store
+.idea/
