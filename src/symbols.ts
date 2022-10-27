@@ -382,17 +382,12 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 
 		// Clear out the current doc symbols to reload them
 		currentDocSymbols.clear();
-		const localIncludes = getImportedFiles(doc);
-
-		// Loop through included files FOR THIS DOC and add symbols for them
-		for(const includedFile of localIncludes) {
-			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
-
-			getSymbolsForDocument(includedDoc, currentDocSymbols);
-		}
 
 		// Get the local doc symbols
 		const localSymbols = getSymbolsForDocument(doc, currentDocSymbols);
+		
+		// Get the doc symbols of includes
+		await provideDocumentSymbolsForIncludes(doc, currentDocSymbols);
 
 		// We return the local symbols as they are displayed in the document Outline
 		return localSymbols;
@@ -400,6 +395,32 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 		output.appendLine(error);
 		return null;
 	}
+}
+
+async function provideDocumentSymbolsForIncludes(doc: TextDocument, currentDocSymbols: Set<AspSymbol>) {
+	const localIncludes = getImportedFiles(doc);
+
+	for(const includedFile of localIncludes) {
+		var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
+		
+		if (documentSymbolsAlreadyLoaded(includedDoc, currentDocSymbols)) continue;
+
+		getSymbolsForDocument(includedDoc, currentDocSymbols);
+
+		// Recursive so nested includes are registered as well
+		await provideDocumentSymbolsForIncludes(includedDoc, currentDocSymbols);
+	}
+}
+
+// Just as a fail-safe to prevent an infinite loop in case includes are referencing to each other
+function documentSymbolsAlreadyLoaded(doc: TextDocument, currentDocSymbols: Set<AspSymbol>) {
+	for(const aspSymbol of currentDocSymbols.values()) {
+		if (aspSymbol.sourceFilePath === doc.uri.fsPath) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 export function getSymbolAtPosition(doc: TextDocument, position: Position): AspSymbol {
