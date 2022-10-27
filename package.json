@@ -81,6 +81,13 @@
 				}
 			}
 		],
+		"snippets": [
+			{
+				"language": "asp",
+				"scopeName": "text.html.asp",
+				"path": "./snippets/asp.json"
+			}
+		],
 		"configuration": {
 			"type": "object",
 			"title": "ASP Classic Support",
@@ -131,13 +138,6 @@
 			}
 		}
 	},
-	"snippets": [
-		{
-			"language": "asp",
-			"scopeName": "text.html.asp",
-			"path": "./snippets/asp.json"
-		}
-	],
 	"devDependencies": {
 		"@types/chai": "^4.2.14",
 		"@types/mocha": "^8.2.0",

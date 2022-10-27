@@ -1,31 +1,47 @@
 {
+	"asp": {
+        "prefix": ["asp"],
+        "body": [
+			"<%",
+				"\t$0",
+			"%>"
+		],
+        "description": "<%%>"
+    },
+    "asp write": {
+        "prefix": ["aspw"],
+        "body": ["<%=$0%>"],
+        "description": "<%= %>"
+    },
 	"new class": {
 		"prefix": "Class",
 		"body": [
 			"Class ${1:$TM_FILENAME_BASE}",
-				"",
 				"\tPrivate Sub Class_Initialize()",
-					"\t\t",
+					"\t\t'Constructor",
 				"\tEnd Sub",
 				"",
 				"\tPrivate Sub Class_Terminate()",
-					"\t\t",
+					"\t\t'Destroy arr",
 				"\tEnd Sub",
 				"",
-				"$0",
-			"End Class ' $1"
+				"\t${0:'Do something. Create new function or sub...}",
+			"End Class"
 		],
 		"description": "New Class..."
 	},
-
+    "constructor": {
+        "body": ["Private Sub Class_Initialize()\n\t${1:'Constructor}\nEnd Sub"],
+        "description": "Set Class",
+        "prefix": ["ctor"]
+    },
 	"new fso": {
 		"prefix": "FileSystemObject",
 		"body": [
-			"Set fso = CreateObject(\"Scripting.FileSystemObject\")"
+			"Set ${1:fso} = CreateObject(\"Scripting.FileSystemObject\")"
 		],
 		"description": "New FileSystemObject..."
 	},
-
 	"new dictionary": {
 		"prefix": "Dictionary",
 		"body": [
@@ -33,7 +49,6 @@
 		],
 		"description": "New Dictionary..."
 	},
-
 	"wmiquery": {
 		"prefix": "wmiquery",
 		"body": [
@@ -41,41 +56,38 @@
 		],
 		"description": "Execute WMI Query"
 	},
-
 	"Wscript.Echo": {
 		"prefix": "Echo",
 		"body": [
 			"WScript.Echo $0"
 		]
 	},
-
 	"new function": {
 		"prefix": "Function",
 		"body": [
-			"Function ${1:Name}(${2:Parameter})",
-				"\t$0",
-			"End Function ' ${1:Name}"
+			"${1|Public,Private|} Function ${2:Name}(${3:Parameter})",
+				"\t${0:'Body}",
+			"End Function"
 		],
 		"description": "New Function..."
 	},
 	"new sub": {
 		"prefix": "Sub",
 		"body": [
-			"Sub ${1:Name}(${2:Parameter})",
-				"\t$0",
-			"End Sub ' ${1:Name}"
+			"${1|Public,Private|} Sub ${2:Name}(${3:Parameter})",
+				"\t${0:'Body}",
+			"End Sub"
 		],
 		"description": "New Sub..."
 	},
-
 	"public property": {
 		"prefix": "PropertyPublic",
 		"body": [
 			"Public Property Get ${1:PropertyName}",
-				"\tSet ${1:PropertyName} = m_${1:PropertyName}",
+				"\tSet $1 = m_$1",
 			"End Property",
-			"Public Property Let ${1:PropertyName}(Value)",
-				"\tSet m_${1:PropertyName} = Value",
+			"Public Property Let $1(Value)",
+				"\tSet m_$1 = Value",
 			"End Property"
 		],
 		"description": "Public Property..."
@@ -84,83 +96,102 @@
 		"prefix": "PropertyPrivate",
 		"body": [
 			"Private Property Get ${1:PropertyName}",
-				"\tSet ${1:PropertyName} = m_${1:PropertyName}",
+				"\tSet $1 = m_$1",
 			"End Property",
-			"Private Property Let ${1:PropertyName}(Value)",
-				"\tSet m_${1:PropertyName} = Value",
+			"Private Property Let $1(Value)",
+				"\tSet m_$1 = Value",
 			"End Property"
 		],
 		"description": "Private Property..."
 	},
-
 	"if statement": {
 		"prefix": "If",
 		"body": [
-			"If ${1:True} Then",
-				"\t$0",
+			"If (${1:Condition}) Then",
+				"\t${0:'True}",
 			"End If"
 		],
 		"description": "If Then..."
 	},
-
 	"if Else statement": {
 		"prefix": "IfElse",
 		"body": [
-			"If ${1:True} Then",
-				"\t$0",
+			"If (${1:Condition}) Then",
+				"\t${2:'True}",
 			"Else",
-				"\t",
+				"\t${0:'False}",
 			"End If"
 		],
 		"description": "If Else Then..."
 	},
-
+	"else": {
+		"prefix": "Else",
+		"body": [
+			"Else",
+				"\t${0:'Do something...}"
+		],
+		"description": "Else..."
+	},
 	"elseif statement": {
 		"prefix": "ElseIf",
 		"body": [
-			"ElseIf ${1:True} Then",
-				"\t$0"
+			"ElseIf (${1:Condition}) Then",
+				"\t${0:'Do something...}"
 		],
 		"description": "ElseIf..."
 	},
-
 	"select case": {
 		"prefix": "SelectCase",
 		"body": [
 			"Select Case ${1:Statement}",
-				"\tCase ${0}",
-					"\t\t",
+				"\tCase ${2:Condition}",
+					"\t\t${3:'Do something...}",
 				"\tCase Else",
-					"\t\t",
+					"\t\t${0:'Default...}",
 			"End Select"
 		],
 		"description": "Select Case..."
 	},
-
+	"case": {
+		"prefix": "Case",
+		"body": [
+			"Case ${1:Condition}",
+				"\t${0:'Do something...}"
+		],
+		"description": "Case..."
+	},
 	"for... next": {
 		"prefix": "For",
 		"body": [
-			"For ${1:i}=0 To ${2:Value}",
-				"\t$0",
-			"Next '${1:i}"
+			"For ${1:i} = ${2:0} To ${3:10} ${4:Step 1}",
+				"\t${0:'Body}",
+			"Next"
 		],
 		"description": "For... Next"
 	},
+    "reverse for": {
+		"prefix": ["forr"],
+        "body": [
+			"For ${1:i} = ${2:10} To ${3:1} ${4:Step -1}",
+				"\t${0:'Body}",
+			"Next"
+		],
+        "description": "For... Next"
+    },
 	"for each": {
 		"prefix": "ForEach",
 		"body": [
 			"For Each ${1:Element} In ${2:ElementList}",
-				"\t$0",
-			"Next ' ${1:Element}"
+				"\t${0:'Body}",
+			"Next"
 		],
 		"description": "For Each..."
 	},
-
 	"do loop until": {
 		"prefix": "DoLoopUntil",
 		"body": [
 			"Do",
-				"\t$0",
+				"\t${0:'Body}",
 			"Loop Until ${1:Statement}"
 		],
 		"description": "Do Loop Until"
@@ -169,7 +200,7 @@
 		"prefix": "DoLoopWhile",
 		"body": [
 			"Do",
-				"\t$0",
+				"\t${0:'Body}",
 			"Loop While ${1:Statement}"
 		],
 		"description": "Do Loop While"
@@ -178,7 +209,7 @@
 		"prefix": "DoUntil",
 		"body": [
 			"Do Until ${1:Statement}",
-				"\t$0",
+				"\t${0:'Body}",
 			"Loop"
 		],
 		"description": "Do Until Loop"
@@ -187,7 +218,7 @@
 		"prefix": "DoWhile",
 		"body": [
 			"Do While ${1:Statement}",
-				"\t$0",
+				"\t${0:'Body}",
 			"Loop"
 		],
 		"description": "Do While Loop"
@@ -196,7 +227,7 @@
 		"prefix": "While",
 		"body": [
 			"While ${1:Statement}",
-				"\t$0",
+				"\t${0:'Body}",
 			"Wend"
 		],
 		"description": "Do While Loop"
@@ -205,8 +236,8 @@
 		"prefix": "With",
 		"body": [
 			"With ${1:Object}",
-				"\t$0",
-			"End With ' ${1:Object}"
+				"\t${0:'Body}",
+			"End With"
 		],
 		"description": "With Block"
 	},
