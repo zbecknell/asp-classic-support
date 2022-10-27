@@ -6,9 +6,9 @@ import { getRegionsInsideRange, positionIsInsideAspRegion, replaceCharacter } fr
 import { should } from "chai";
 
 /** Returns true if an object was found... or something? */
-function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: string): boolean {
+function getObjectMembersCode(doc: TextDocument, objectsToAdd : CompletionItem[], objectName: string): boolean {
 
-  for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
+  for(const symbol of [...currentDocSymbols(doc.fileName), ...builtInSymbols]) {
 
     if(symbol.symbol.kind === SymbolKind.Class && symbol.symbol.name.toLowerCase() === objectName.toLowerCase()) {
 
@@ -16,7 +16,7 @@ function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: strin
 
         const completion = getCompletionFromSymbol(item);
 
-        const documentation = getDocumentationForSymbol(item, objectName);
+        const documentation = getDocumentationForSymbol(doc, item, objectName);
 
         if(documentation) {
           completion.documentation = new MarkdownString(documentation);
@@ -35,8 +35,8 @@ function getObjectMembersCode(objectsToAdd : CompletionItem[], objectName: strin
   return false;
 }
 
-function getDocumentationForSymbol(symbol: DocumentSymbol, parentName: string): string {
-  for(const aspSymbol of [...currentDocSymbols, ...builtInSymbols]) {
+function getDocumentationForSymbol(doc: TextDocument, symbol: DocumentSymbol, parentName: string): string {
+  for(const aspSymbol of [...currentDocSymbols(doc.fileName), ...builtInSymbols]) {
     if(aspSymbol.symbol.name !== symbol.name || aspSymbol.parentName?.toLowerCase() !== parentName.toLowerCase()) {
       continue;
     }
@@ -136,13 +136,13 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
     output.appendLine(`Dot typed for object: ${objectName}`);
 
     // eslint-disable-next-line no-empty
-    if (getObjectMembersCode(results, objectName)) {
+    if (getObjectMembersCode(doc, results, objectName)) {
 
     }
     else {
 
 			// Fall back to using all available symbols
-			for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
+			for(const symbol of [...currentDocSymbols(doc.fileName), ...builtInSymbols]) {
 
 				const completion = getCompletionFromSymbol(symbol.symbol);
 
@@ -166,7 +166,7 @@ function provideCompletionItems(doc: TextDocument, position: Position): Completi
 
 		// TODO: don't factor out this and above as it's copy/paste
 		// No DOT, use all available symbols
-    for(const symbol of [...currentDocSymbols, ...builtInSymbols]) {
+    for(const symbol of [...currentDocSymbols(doc.fileName), ...builtInSymbols]) {
 
 			const completion = getCompletionFromSymbol(symbol.symbol);
 

@@ -108,7 +108,7 @@ function provideSignatureHelp(doc: TextDocument, position: Position, _token: Can
   let candidateSignatures: SignatureInformation[] | undefined;
 
 	// Get candidate signatures for the caller.func name from all symbols
-	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols]);
+	const allSymbols = new Set([...builtInSymbols, ...currentDocSymbols(doc.fileName)]);
 
 	for(const symbol of allSymbols) {
 
