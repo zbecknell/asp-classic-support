@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2022-10-27
+
+- Fix an issue with disappearing symbols (another thanks to [AlmarAubel](https://github.com/zbecknell/asp-classic-support/pull/18)!)
+- Add support for nested includes (thank you [robert-dejong](https://github.com/zbecknell/asp-classic-support/pull/20))
+- Fix for snippet bug (thank you [m-bilgi](https://github.com/zbecknell/asp-classic-support/pull/21))
+- Fix to stop the extension output popping up when the extension activates.
+
 ## [0.5.3] - 2022-10-20
 
 - Fix incorrect hover documentation. Thank you [AlmarAubel](https://github.com/zbecknell/asp-classic-support/pull/16)!
