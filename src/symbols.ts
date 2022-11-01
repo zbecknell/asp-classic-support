@@ -390,15 +390,7 @@ async function provideDocumentSymbols(doc: TextDocument): Promise<DocumentSymbol
 
 		// Clear out the current doc symbols to reload them
 		currentDocSymbols(doc.fileName).clear();
-		const localIncludes = getImportedFiles(doc);
-
-		// Loop through included files FOR THIS DOC and add symbols for them
-		for(const includedFile of localIncludes) {
-			var includedDoc = await workspace.openTextDocument(includedFile[1].Uri);
-
-			getSymbolsForDocument(includedDoc, currentDocSymbols(doc.fileName));
-		}
-
+		
 		// Get the local doc symbols
 		const localSymbols = getSymbolsForDocument(doc, currentDocSymbols(doc.fileName));
 
