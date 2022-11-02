@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2022-11-01
+
+- Fix for includes not working. Thank you [robert-dejong](https://github.com/zbecknell/asp-classic-support/pull/22)!
+
 ## [0.6.0] - 2022-10-27
 
 - Fix an issue with disappearing symbols (another thanks to [AlmarAubel](https://github.com/zbecknell/asp-classic-support/pull/18)!)

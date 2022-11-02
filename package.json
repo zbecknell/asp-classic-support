@@ -2,7 +2,7 @@
 	"name": "asp-classic-support",
 	"displayName": "ASP Classic Support",
 	"description": "Includes syntax highlighting, intellisense, and code navigation for VBScript inside Active Server Pages (ASP) files.",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"publisher": "zbecknell",
 	"icon": "assets/logo.png",
 	"engines": {
